@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 11, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/User/ignitioniq/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <section className=\"flex flex-col items-center justify-center text-center py-20 px-6\">\n      <h1 className=\"text-5xl font-extrabold mb-6 text-blue-700\">\n        Welcome to IgnitionIQ\n      </h1>\n      <p className=\"text-lg text-gray-600 max-w-2xl mb-8\">\n        Building smarter solutions for tomorrow. We combine technology and creativity\n        to ignite innovation and make a real impact.\n      </p>\n\n      <div className=\"flex gap-4\">\n        <a\n          href=\"#\"\n          className=\"bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition\"\n        >\n          Get Started\n        </a>\n        <a\n          href=\"#\"\n          className=\"border border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition\"\n        >\n          Learn More\n        </a>\n      </div>\n    </section>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,4PAAC;QAAQ,WAAU;;0BACjB,4PAAC;gBAAG,WAAU;0BAA6C;;;;;;0BAG3D,4PAAC;gBAAE,WAAU;0BAAuC;;;;;;0BAKpD,4PAAC;gBAAI,WAAU;;kCACb,4PAAC;wBACC,MAAK;wBACL,WAAU;kCACX;;;;;;kCAGD,4PAAC;wBACC,MAAK;wBACL,WAAU;kCACX;;;;;;;;;;;;;;;;;;AAMT","debugId":null}}]
+}
