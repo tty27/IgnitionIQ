@@ -5,7 +5,10 @@ const router = express.Router();
 const levelController = require('../controllers/levelController');
 const authenticateToken = require('../middleware/auth');
 
-// Get questions by category and level
+// Get questions by category and specific level (this route must come FIRST)
+router.get('/questions/:category/:level', authenticateToken, levelController.getQuestionsByLevel);
+
+// Get questions by category (current level) - this route comes SECOND
 router.get('/questions/:category', authenticateToken, levelController.getQuestionsByLevel);
 
 // Save result with XP calculation

@@ -49,9 +49,8 @@ function calculateCategoryLevel(categoryXp) {
 // Get questions by category and level
 exports.getQuestionsByLevel = async (req, res) => {
   try {
-    const { category } = req.params;
+    const { category, level: levelParam } = req.params;
     const userId = req.user.userId;
-    let { level } = req.query;
 
     // Get category ID
     const [categories] = await db.query(
@@ -65,8 +64,24 @@ exports.getQuestionsByLevel = async (req, res) => {
 
     const categoryId = categories[0].id;
 
-    // If no level specified, get user's current level for this category
-    if (!level) {
+    // If level is provided in path, use it; otherwise get user's current level
+    let level;
+    if (levelParam) {
+      level = parseInt(levelParam);
+      
+      // Check if user has access to this level
+      const [progress] = await db.query(
+        'SELECT current_level FROM user_category_progress WHERE user_id = ? AND category_id = ?',
+        [userId, categoryId]
+      );
+      
+      const userLevel = progress.length > 0 ? progress[0].current_level : 1;
+      
+      if (level > userLevel) {
+        return res.status(403).json({ error: 'Level not unlocked yet' });
+      }
+    } else {
+      // Get user's current level for this category
       const [progress] = await db.query(
         'SELECT current_level FROM user_category_progress WHERE user_id = ? AND category_id = ?',
         [userId, categoryId]
@@ -77,14 +92,16 @@ exports.getQuestionsByLevel = async (req, res) => {
 
     // Get questions for this level
     const [questions] = await db.query(
-      'SELECT id, question, image_url, correct_answer FROM questions WHERE category_id = ? AND difficulty_level = ?',
+      'SELECT id, question, image_url, correct_answer FROM questions WHERE category_id = ? AND difficulty_level = ? ORDER BY RAND() LIMIT 10',
       [categoryId, level]
     );
 
     if (questions.length === 0) {
-      return res.status(404).json({ 
-        error: 'No questions available for this level',
-        message: 'You may have completed all levels!' 
+      return res.json({ 
+        questions: [],
+        currentLevel: level,
+        totalLevels: 5,
+        message: 'No questions available for this level'
       });
     }
 
@@ -113,8 +130,8 @@ exports.getQuestionsByLevel = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in getQuestionsByLevel:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
 

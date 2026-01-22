@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trophy, Star, Zap, Award, ChevronRight } from "lucide-react";
+import { ArrowLeft, Trophy, Star, Zap, Award, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -17,6 +17,7 @@ type Question = {
 type LevelInfo = {
   currentLevel: number;
   totalLevels: number;
+  selectedLevel?: number;
 };
 
 type ResultData = {
@@ -35,6 +36,14 @@ type CategoryProgress = {
 
 const LEVEL_NAMES = ["", "Beginner", "Intermediate", "Advanced", "Expert", "Master"];
 const LEVEL_COLORS = ["", "text-gray-400", "text-blue-400", "text-purple-400", "text-orange-400", "text-yellow-400"];
+const LEVEL_BG_COLORS = [
+  "",
+  "from-gray-400 to-gray-600",
+  "from-blue-400 to-blue-600",
+  "from-purple-400 to-purple-600",
+  "from-orange-400 to-orange-600",
+  "from-yellow-400 to-yellow-600"
+];
 
 function RoadSignsQuizContent() {
   const router = useRouter();
@@ -44,6 +53,7 @@ function RoadSignsQuizContent() {
   const [levelInfo, setLevelInfo] = useState<LevelInfo>({ currentLevel: 1, totalLevels: 5 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showLevelSelect, setShowLevelSelect] = useState(true);
   
   const [readyPhase, setReadyPhase] = useState(true);
   const [countdown, setCountdown] = useState(3);
@@ -59,32 +69,8 @@ function RoadSignsQuizContent() {
   const [categoryProgress, setCategoryProgress] = useState<CategoryProgress | null>(null);
 
   useEffect(() => {
-    fetchQuestions();
     fetchCategoryProgress();
   }, [token]);
-
-  const fetchQuestions = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/levels/questions/road-signs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch questions');
-
-      const data = await response.json();
-      setQuestions(data.questions);
-      setLevelInfo({
-        currentLevel: data.currentLevel,
-        totalLevels: data.totalLevels
-      });
-      setLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load questions');
-      setLoading(false);
-    }
-  };
 
   const fetchCategoryProgress = async () => {
     try {
@@ -97,19 +83,51 @@ function RoadSignsQuizContent() {
       if (response.ok) {
         const data = await response.json();
         setCategoryProgress(data);
+        setLevelInfo(prev => ({ 
+          ...prev, 
+          currentLevel: data.currentLevel 
+        }));
+        setLoading(false);
       }
     } catch (err) {
       console.error('Failed to fetch progress:', err);
+      setLoading(false);
+    }
+  };
+
+  const fetchQuestionsForLevel = async (level: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/levels/questions/road-signs/${level}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch questions');
+
+      const data = await response.json();
+      setQuestions(data.questions);
+      setLevelInfo({
+        currentLevel: levelInfo.currentLevel,
+        totalLevels: data.totalLevels,
+        selectedLevel: level
+      });
+      setShowLevelSelect(false);
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load questions');
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (readyPhase) {
+    if (readyPhase && !showLevelSelect) {
       const readyTimeout = setTimeout(() => {
         setReadyPhase(false);
       }, 1500);
       return () => clearTimeout(readyTimeout);
-    } else if (!started && countdown > 0) {
+    } else if (!started && countdown > 0 && !showLevelSelect) {
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -122,7 +140,7 @@ function RoadSignsQuizContent() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [readyPhase, countdown, started]);
+  }, [readyPhase, countdown, started, showLevelSelect]);
 
   useEffect(() => {
     if (!started || showResult) return;
@@ -150,14 +168,13 @@ function RoadSignsQuizContent() {
           score,
           totalQuestions: questions.length,
           timeTaken,
-          level: levelInfo.currentLevel
+          level: levelInfo.selectedLevel || levelInfo.currentLevel
         })
       });
 
       if (response.ok) {
         const data = await response.json();
         setResultData(data);
-        // Refresh category progress
         await fetchCategoryProgress();
       }
     } catch (err) {
@@ -196,8 +213,8 @@ function RoadSignsQuizContent() {
     setResultData(null);
   };
 
-  const playNextLevel = async () => {
-    setLoading(true);
+  const backToLevelSelect = () => {
+    setShowLevelSelect(true);
     setCurrent(0);
     setSelected(null);
     setScore(0);
@@ -208,10 +225,7 @@ function RoadSignsQuizContent() {
     setCountdown(3);
     setReadyPhase(true);
     setResultData(null);
-    
-    // Fetch new questions for next level
-    await fetchQuestions();
-    await fetchCategoryProgress();
+    setQuestions([]);
   };
 
   if (loading) {
@@ -219,7 +233,7 @@ function RoadSignsQuizContent() {
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#c8a951] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#c8a951] text-lg">Loading questions...</p>
+          <p className="text-[#c8a951] text-lg">Loading...</p>
         </div>
       </main>
     );
@@ -238,6 +252,91 @@ function RoadSignsQuizContent() {
           >
             Back to Menu
           </button>
+        </div>
+      </main>
+    );
+  }
+
+  // Level Selection Screen
+  if (showLevelSelect) {
+    return (
+      <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse delay-700"></div>
+        </div>
+
+        <div className="relative z-10 w-full max-w-5xl">
+          <button
+            onClick={() => router.push("/game")}
+            className="absolute top-0 left-0 flex items-center gap-2 border-2 border-[var(--accent)]/30 text-[var(--accent)] px-5 py-2.5 rounded-xl hover:bg-[var(--accent)] hover:text-black hover:border-[var(--accent)] transition-all duration-300 hover:scale-105 font-semibold backdrop-blur-sm"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <div className="p-6 rounded-full bg-[#c8a951]/10 border-4 border-[#c8a951]">
+                <Trophy className="w-16 h-16 text-[#c8a951]" />
+              </div>
+            </div>
+            <h1 className="text-5xl font-black text-[#c8a951] mb-4">Road Signs</h1>
+            <p className="text-xl text-gray-400">Select a level to play</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {Array.from({ length: levelInfo.totalLevels }, (_, i) => i + 1).map((level) => {
+              const isUnlocked = level <= levelInfo.currentLevel;
+              const isCurrent = level === levelInfo.currentLevel;
+
+              return (
+                <button
+                  key={level}
+                  onClick={() => isUnlocked && fetchQuestionsForLevel(level)}
+                  disabled={!isUnlocked}
+                  className={`relative p-8 rounded-2xl border-2 transition-all duration-300 ${
+                    isUnlocked
+                      ? `border-[#c8a951]/50 bg-gradient-to-br ${LEVEL_BG_COLORS[level]}/10 hover:scale-105 hover:border-[#c8a951] hover:shadow-[0_0_30px_rgba(200,169,81,0.3)] cursor-pointer`
+                      : "border-gray-800 bg-gray-900/50 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  {isCurrent && (
+                    <div className="absolute -top-3 -right-3 px-3 py-1 bg-[#c8a951] text-black text-xs font-bold rounded-full flex items-center gap-1">
+                      <Trophy className="w-3 h-3" />
+                      Current
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center gap-4">
+                    {isUnlocked ? (
+                      <Star className={`w-12 h-12 ${LEVEL_COLORS[level]}`} />
+                    ) : (
+                      <Lock className="w-12 h-12 text-gray-600" />
+                    )}
+                    
+                    <div className="text-center">
+                      <div className={`text-3xl font-bold mb-2 ${
+                        isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
+                      }`}>
+                        Level {level}
+                      </div>
+                      <div className={`text-lg font-semibold ${
+                        isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
+                      }`}>
+                        {LEVEL_NAMES[level]}
+                      </div>
+                    </div>
+
+                    {!isUnlocked && (
+                      <div className="text-sm text-gray-500 mt-2">
+                        Complete Level {level - 1} to unlock
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </main>
     );
@@ -265,6 +364,7 @@ function RoadSignsQuizContent() {
   const circleRadius = 45;
   const circumference = 2 * Math.PI * circleRadius;
   const progress = (timeLeft / 60) * circumference;
+  const playingLevel = levelInfo.selectedLevel || levelInfo.currentLevel;
 
   const feedback =
     score === questions.length
@@ -275,56 +375,52 @@ function RoadSignsQuizContent() {
       ? "Good effort! Keep practicing!"
       : "Keep learning — you'll improve!";
 
-  // Check if user unlocked next level
-  const hasNextLevel = categoryProgress && categoryProgress.currentLevel < levelInfo.totalLevels;
+  // Only show next level option if playing current level AND unlocked next level
+  const canProgressToNext = categoryProgress && 
+                            playingLevel === levelInfo.currentLevel && 
+                            categoryProgress.currentLevel > levelInfo.currentLevel &&
+                            categoryProgress.currentLevel <= levelInfo.totalLevels;
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>
 
-      {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#c8a951]/30 py-4 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          {/* Back Button */}
           <button
-            onClick={() => router.push("/game")}
+            onClick={backToLevelSelect}
             className="flex items-center gap-2 border-2 border-[#c8a951]/30 text-[#c8a951] px-5 py-2.5 rounded-xl hover:bg-[#c8a951] hover:text-black hover:border-[#c8a951] transition-all duration-300 font-semibold"
           >
             <ArrowLeft className="w-5 h-5" />
             Back
           </button>
 
-          {/* Level Badge */}
           {!showResult && !timeUp && (
             <div className="flex items-center gap-2 px-5 py-2.5 bg-[#c8a951]/10 border-2 border-[#c8a951]/30 rounded-xl">
-              <Star className={`w-5 h-5 ${LEVEL_COLORS[levelInfo.currentLevel]}`} />
-              <span className={`font-bold ${LEVEL_COLORS[levelInfo.currentLevel]}`}>
-                Level {levelInfo.currentLevel}: {LEVEL_NAMES[levelInfo.currentLevel]}
+              <Star className={`w-5 h-5 ${LEVEL_COLORS[playingLevel]}`} />
+              <span className={`font-bold ${LEVEL_COLORS[playingLevel]}`}>
+                Level {playingLevel}: {LEVEL_NAMES[playingLevel]}
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Main Content - Add top padding for fixed header */}
       <div className="relative z-10 w-full max-w-4xl mt-20">
-        {/* Ready Phase */}
         {readyPhase && (
           <div className="text-center">
             <div className="text-8xl font-black text-[#c8a951] animate-pulse drop-shadow-[0_0_40px_rgba(200,169,81,0.6)]">
               Ready!
             </div>
-            <p className={`text-2xl mt-4 ${LEVEL_COLORS[levelInfo.currentLevel]}`}>
-              Level {levelInfo.currentLevel}: {LEVEL_NAMES[levelInfo.currentLevel]}
+            <p className={`text-2xl mt-4 ${LEVEL_COLORS[playingLevel]}`}>
+              Level {playingLevel}: {LEVEL_NAMES[playingLevel]}
             </p>
           </div>
         )}
 
-        {/* Countdown Phase */}
         {!readyPhase && !started && countdown > 0 && (
           <div className="text-center">
             <div className="text-9xl font-black text-[#c8a951] animate-bounce drop-shadow-[0_0_60px_rgba(200,169,81,0.8)]">
@@ -333,7 +429,6 @@ function RoadSignsQuizContent() {
           </div>
         )}
 
-        {/* Time Up Screen */}
         {timeUp && !showResult && (
           <div className="text-center bg-gradient-to-b from-[#0a0a0a] to-black border-2 border-[#c8a951]/30 rounded-3xl p-12 shadow-[0_0_60px_rgba(200,169,81,0.2)] backdrop-blur-sm">
             <h2 className="text-5xl font-bold mb-6 text-[#c8a951]">Time's Up!</h2>
@@ -349,10 +444,8 @@ function RoadSignsQuizContent() {
           </div>
         )}
 
-        {/* Result Screen with Next Level Option */}
         {showResult && (
           <div className="text-center bg-gradient-to-b from-[#0a0a0a] to-black border-2 border-[#c8a951] rounded-3xl p-12 shadow-[0_0_80px_rgba(200,169,81,0.3)] backdrop-blur-sm">
-            {/* Level Up Animation */}
             {resultData?.leveledUp && (
               <div className="mb-6 p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-xl animate-pulse">
                 <div className="flex items-center justify-center gap-3 text-yellow-400">
@@ -364,14 +457,13 @@ function RoadSignsQuizContent() {
               </div>
             )}
 
-            {/* Next Level Unlocked */}
-            {hasNextLevel && categoryProgress && (
+            {canProgressToNext && (
               <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/50 rounded-xl">
                 <div className="flex items-center justify-center gap-3 text-blue-400">
                   <Star className="w-8 h-8 animate-spin" />
-                  <span className="text-2xl font-bold">Level {categoryProgress.currentLevel} Unlocked!</span>
+                  <span className="text-2xl font-bold">Level {categoryProgress!.currentLevel} Unlocked!</span>
                 </div>
-                <p className="text-blue-300 mt-2">{LEVEL_NAMES[categoryProgress.currentLevel]} difficulty available</p>
+                <p className="text-blue-300 mt-2">{LEVEL_NAMES[categoryProgress!.currentLevel]} difficulty available</p>
               </div>
             )}
 
@@ -382,7 +474,7 @@ function RoadSignsQuizContent() {
             </div>
 
             <h2 className="text-5xl font-black mb-6 text-[#c8a951] drop-shadow-[0_0_20px_rgba(200,169,81,0.6)]">
-              Level {levelInfo.currentLevel} Complete!
+              Level {playingLevel} Complete!
             </h2>
 
             <p className="text-2xl text-gray-300 mb-8 font-light">{feedback}</p>
@@ -391,7 +483,6 @@ function RoadSignsQuizContent() {
               {score}/{questions.length}
             </div>
 
-            {/* XP Display */}
             {resultData && (
               <div className="mb-8 space-y-3">
                 <div className="flex items-center justify-center gap-3 text-xl">
@@ -412,42 +503,37 @@ function RoadSignsQuizContent() {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex flex-col gap-4">
-              {/* Next Level Button (if unlocked) */}
-              {hasNextLevel && categoryProgress && (
+              {canProgressToNext && (
                 <button
-                  onClick={playNextLevel}
+                  onClick={() => fetchQuestionsForLevel(categoryProgress!.currentLevel)}
                   className="w-full px-8 py-5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(59,130,246,0.5)] flex items-center justify-center gap-3"
                 >
-                  <span>Continue to Level {categoryProgress.currentLevel}</span>
+                  <span>Continue to Level {categoryProgress!.currentLevel}</span>
                   <ChevronRight className="w-6 h-6" />
                 </button>
               )}
 
-              {/* Regular Buttons */}
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <button
                   onClick={restartQuiz}
                   className="px-8 py-4 rounded-xl bg-[#c8a951] text-black font-bold text-lg hover:bg-[#d9b85c] transition-all duration-300 hover:scale-105 shadow-[0_0_30px_rgba(200,169,81,0.4)]"
                 >
-                  Replay Level {levelInfo.currentLevel}
+                  Replay Level {playingLevel}
                 </button>
                 <button
-                  onClick={() => router.push("/game")}
+                  onClick={backToLevelSelect}
                   className="px-8 py-4 rounded-xl border-2 border-[#c8a951] text-[#c8a951] font-bold text-lg hover:bg-[#c8a951] hover:text-black transition-all duration-300 hover:scale-105"
                 >
-                  Back to Menu
+                  Level Select
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Quiz Interface */}
         {started && !showResult && !timeUp && (
           <div className="text-center bg-gradient-to-b from-[#0a0a0a] to-black border-2 border-[#c8a951]/30 rounded-3xl p-10 shadow-[0_0_60px_rgba(200,169,81,0.2)] backdrop-blur-sm">
-            {/* Timer Circle */}
             <div className="flex justify-center mb-8 relative">
               <svg width="120" height="120">
                 <circle cx="60" cy="60" r={circleRadius} stroke="#1a1a1a" strokeWidth="10" fill="none" />
@@ -470,7 +556,6 @@ function RoadSignsQuizContent() {
               </span>
             </div>
 
-            {/* Progress */}
             <div className="mb-8">
               <div className="flex justify-between text-sm text-gray-400 mb-2">
                 <span>Question {current + 1}</span>
@@ -484,7 +569,6 @@ function RoadSignsQuizContent() {
               </div>
             </div>
 
-            {/* Question Image */}
             {question.image && (
               <div className="mb-8 flex justify-center">
                 <div className="p-6 bg-[#1a1a1a] rounded-2xl border-2 border-[#c8a951]/20">
@@ -497,12 +581,10 @@ function RoadSignsQuizContent() {
               </div>
             )}
 
-            {/* Question */}
             <h3 className="text-2xl font-bold mb-8 text-white">
               {question.question}
             </h3>
 
-            {/* Options */}
             <div className="grid gap-4">
               {question.options.map((option) => (
                 <button
