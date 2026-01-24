@@ -46,7 +46,9 @@ function calculateCategoryLevel(categoryXp) {
   return 5;                               // Master
 }
 
-// Get questions by category and level
+// backend/controllers/levelController.js (PARTIAL UPDATE)
+// Replace the getQuestionsByLevel function with this updated version
+
 exports.getQuestionsByLevel = async (req, res) => {
   try {
     const { category, level: levelParam } = req.params;
@@ -90,9 +92,9 @@ exports.getQuestionsByLevel = async (req, res) => {
       level = progress.length > 0 ? progress[0].current_level : 1;
     }
 
-    // Get questions for this level
+    // Get questions for this level WITH EXPLANATION
     const [questions] = await db.query(
-      'SELECT id, question, image_url, correct_answer FROM questions WHERE category_id = ? AND difficulty_level = ? ORDER BY RAND() LIMIT 10',
+      'SELECT id, question, image_url, correct_answer, explanation FROM questions WHERE category_id = ? AND difficulty_level = ? ORDER BY RAND() LIMIT 10',
       [categoryId, level]
     );
 
@@ -118,7 +120,8 @@ exports.getQuestionsByLevel = async (req, res) => {
           question: q.question,
           image: q.image_url,
           options: options.map(o => o.option_text),
-          correct: q.correct_answer
+          correct: q.correct_answer,
+          explanation: q.explanation // NEW: Include explanation
         };
       })
     );

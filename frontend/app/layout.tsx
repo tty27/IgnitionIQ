@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogOut, User, CarFront, Star, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Trophy, BookOpen } from "lucide-react";
 
 function Navigation() {
   const { user, logout, token } = useAuth();
@@ -13,32 +14,7 @@ function Navigation() {
   const [userLevel, setUserLevel] = useState<number | null>(null);
   const [userXp, setUserXp] = useState<number | null>(null);
 
-  // Fetch user level and XP
-  useEffect(() => {
-    async function fetchUserStats() {
-      if (!token) return;
-      
-      try {
-        const response = await fetch('http://localhost:5000/api/levels/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUserLevel(data.user.level);
-          setUserXp(data.user.totalXp);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user stats:', error);
-      }
-    }
-
-    if (user && token) {
-      fetchUserStats();
-    }
-  }, [user, token, pathname]); // Refresh when pathname changes (after quiz completion)
+  // ... existing useEffect code ...
 
   if (pathname === '/login' || pathname === '/register') {
     return null;
@@ -56,6 +32,24 @@ function Navigation() {
           </h1>
         </div>
       </Link>
+      
+      {/* NEW: Navigation Links */}
+      {user && (
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/leaderboard">
+            <button className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-[#c8a951] transition-colors">
+              <Trophy className="w-4 h-4" />
+              <span>Leaderboard</span>
+            </button>
+          </Link>
+          <Link href="/review">
+            <button className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-[#c8a951] transition-colors">
+              <BookOpen className="w-4 h-4" />
+              <span>Review</span>
+            </button>
+          </Link>
+        </div>
+      )}
       
       <div className="flex items-center gap-4">
         {user ? (

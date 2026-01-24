@@ -54,6 +54,8 @@ function RoadSignsQuizContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showLevelSelect, setShowLevelSelect] = useState(true);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [currentExplanation, setCurrentExplanation] = useState('');
   
   const [readyPhase, setReadyPhase] = useState(true);
   const [countdown, setCountdown] = useState(3);
@@ -182,24 +184,30 @@ function RoadSignsQuizContent() {
     }
   };
 
-  const handleAnswer = (option: string) => {
-    setSelected(option);
-    const isCorrect = option === question.correct;
-    if (isCorrect) {
-      setScore((prev) => prev + 1);
+const handleAnswer = (option: string) => {
+  setSelected(option);
+  const isCorrect = option === question.correct;
+  
+  // Show explanation
+  setCurrentExplanation(question.explanation || 'No explanation available');
+  setShowExplanation(true);
+  
+  if (isCorrect) {
+    setScore((prev) => prev + 1);
+  }
+  
+  // Wait longer to show explanation before moving to next question
+  setTimeout(() => {
+    setShowExplanation(false);
+    if (current + 1 < questions.length) {
+      setCurrent(current + 1);
+      setSelected(null);
+    } else {
+      setShowResult(true);
+      saveResult();
     }
-    
-    setTimeout(() => {
-      if (current + 1 < questions.length) {
-        setCurrent(current + 1);
-        setSelected(null);
-      } else {
-        setShowResult(true);
-        saveResult();
-      }
-    }, 800);
-  };
-
+  }, 3000); // 3 seconds to read explanation
+};
   const restartQuiz = () => {
     setCurrent(0);
     setSelected(null);
