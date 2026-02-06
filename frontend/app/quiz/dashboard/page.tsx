@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trophy, Star, Zap, Award, ChevronRight, Lock, Gauge } from "lucide-react";
+import { ArrowLeft, Trophy, Star, Zap, Award, ChevronRight, Lock, Wrench, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -12,6 +12,7 @@ type Question = {
   question: string;
   options: string[];
   correct: string;
+  explanation?: string;
 };
 
 type LevelInfo = {
@@ -47,28 +48,45 @@ const LEVEL_BG_COLORS = [
 
 function RoadSignsQuizContent() {
   const router = useRouter();
-  const { token } = useAuth();
-  
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [levelInfo, setLevelInfo] = useState<LevelInfo>({ currentLevel: 1, totalLevels: 5 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showLevelSelect, setShowLevelSelect] = useState(true);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [currentExplanation, setCurrentExplanation] = useState('');
-  
-  const [readyPhase, setReadyPhase] = useState(true);
-  const [countdown, setCountdown] = useState(3);
-  const [started, setStarted] = useState(false);
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [timeUp, setTimeUp] = useState(false);
-  const [quizStartTime, setQuizStartTime] = useState<number>(0);
-  const [resultData, setResultData] = useState<ResultData | null>(null);
-  const [categoryProgress, setCategoryProgress] = useState<CategoryProgress | null>(null);
+    const { token } = useAuth();
+    
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [levelInfo, setLevelInfo] = useState<LevelInfo>({ currentLevel: 1, totalLevels: 5 });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [showLevelSelect, setShowLevelSelect] = useState(true);
+    const [showExplanation, setShowExplanation] = useState(false);
+    const [currentExplanation, setCurrentExplanation] = useState('');
+    
+    const [readyPhase, setReadyPhase] = useState(true);
+    const [countdown, setCountdown] = useState(3);
+    const [started, setStarted] = useState(false);
+    const [current, setCurrent] = useState(0);
+    const [selected, setSelected] = useState<string | null>(null);
+    const [score, setScore] = useState(0);
+    const [showResult, setShowResult] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [timeUp, setTimeUp] = useState(false);
+    const [quizStartTime, setQuizStartTime] = useState<number>(0);
+    const [resultData, setResultData] = useState<ResultData | null>(null);
+    const [categoryProgress, setCategoryProgress] = useState<CategoryProgress | null>(null);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
 
   useEffect(() => {
     fetchCategoryProgress();
@@ -208,47 +226,7 @@ const handleAnswer = (option: string) => {
     }
   }, 3000); // 3 seconds to read explanation
 };
-  
 
-// Add this JSX after the answer buttons (in your quiz display section):
-{showExplanation && (
-  <div className={`mt-6 p-6 rounded-xl border-2 ${
-    selected === question.correct 
-      ? 'bg-green-500/10 border-green-500' 
-      : 'bg-blue-500/10 border-blue-500'
-  } animate-fade-in`}>
-    <div className="flex items-start gap-3">
-      <div className={`p-2 rounded-lg ${
-        selected === question.correct ? 'bg-green-500' : 'bg-blue-500'
-      }`}>
-        {selected === question.correct ? (
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )}
-      </div>
-      <div className="flex-1">
-        <h4 className={`font-bold mb-2 ${
-          selected === question.correct ? 'text-green-400' : 'text-blue-400'
-        }`}>
-          {selected === question.correct ? 'Correct!' : 'Learn More'}
-        </h4>
-        <p className="text-gray-300 leading-relaxed">
-          {currentExplanation}
-        </p>
-        {selected !== question.correct && (
-          <p className="mt-3 text-sm text-gray-400">
-            <span className="font-semibold text-green-400">Correct answer:</span> {question.correct}
-          </p>
-        )}
-      </div>
-    </div>
-  </div>
-)}
   const restartQuiz = () => {
     setCurrent(0);
     setSelected(null);
@@ -276,6 +254,9 @@ const handleAnswer = (option: string) => {
     setResultData(null);
     setQuestions([]);
   };
+
+  const carPosition = Math.min(scrollY * 0.5, 300);
+  const carRotation = Math.min(scrollY * 0.05, 15);
 
   if (loading) {
     return (
@@ -310,84 +291,195 @@ const handleAnswer = (option: string) => {
   if (showLevelSelect) {
     return (
       <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse delay-700"></div>
-        </div>
-
-        <div className="relative z-10 w-full max-w-5xl">
-          <button
-            onClick={() => router.push("/game")}
-            className="absolute top-0 left-0 flex items-center gap-2 border-2 border-[var(--accent)]/30 text-[var(--accent)] px-5 py-2.5 rounded-xl hover:bg-[var(--accent)] hover:text-black hover:border-[var(--accent)] transition-all duration-300 hover:scale-105 font-semibold backdrop-blur-sm"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back
-          </button>
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-6">
-              <div className="p-6 rounded-full bg-[#c8a951]/10 border-4 border-[#c8a951]">
-                <Gauge className="w-16 h-16 text-[#c8a951]" />
+              {/* Enhanced Background */}
+              <div className="fixed inset-0 z-0">
+                <div 
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8a951' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                    backgroundSize: '60px 60px',
+                  }}
+                />
+                
+                <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+                
+                <div 
+                  className="absolute w-96 h-96 bg-[#c8a951]-500/10 rounded-full blur-3xl animate-pulse"
+                  style={{
+                    top: '10%',
+                    left: '10%',
+                    transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+                  }}
+                ></div>
+                <div 
+                  className="absolute w-96 h-96 bg-[#c8a951]/10 rounded-full blur-3xl animate-pulse"
+                  style={{
+                    bottom: '10%',
+                    right: '10%',
+                    transform: `translate(${-mousePosition.x * 0.02}px, ${-mousePosition.y * 0.02}px)`,
+                    animationDelay: '1s'
+                  }}
+                ></div>
+      
+                {/* Road Lines - Both Sides */}
+                <div className="absolute inset-0 overflow-hidden">
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={`left-${i}`}
+                      className="absolute w-4 h-32 bg-gradient-to-b from-transparent via-[#c8a951]/40 to-transparent rounded-full"
+                      style={{
+                        left: `${5 + i * 5}%`,
+                        animation: `roadLine 2.5s linear infinite`,
+                        animationDelay: `${i * 0.3}s`,
+                        top: '-150px'
+                      }}
+                    ></div>
+                  ))}
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={`right-${i}`}
+                      className="absolute w-4 h-32 bg-gradient-to-b from-transparent via-[#c8a951]/40 to-transparent rounded-full"
+                      style={{
+                        right: `${5 + i * 5}%`,
+                        animation: `roadLine 2.5s linear infinite`,
+                        animationDelay: `${i * 0.3 + 0.15}s`,
+                        top: '-150px'
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+      
+              {/* Animated Car */}
+              <div 
+              className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
+              style={{
+                left: '8%',
+                top: `${100 + carPosition}px`,
+                transform: `rotate(${carRotation}deg) scale(1.2)`,
+              }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-[#c8a951] blur-3xl opacity-60 scale-[2]"></div>
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" className="relative z-10 drop-shadow-[0_0_30px_rgba(200,169,81,1)]">
+                  <path d="M5 13l1.5-4.5h11L19 13" stroke="#c8a951" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(200,169,81,0.3)"/>
+                  <path d="M4 13h16v5H4z" stroke="#c8a951" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(200,169,81,0.4)"/>
+                  <circle cx="7" cy="18" r="2.5" fill="#1a1a1a" stroke="#c8a951" strokeWidth="2"/>
+                  <circle cx="7" cy="18" r="1.5" fill="#c8a951"/>
+                  <circle cx="17" cy="18" r="2.5" fill="#1a1a1a" stroke="#c8a951" strokeWidth="2"/>
+                  <circle cx="17" cy="18" r="1.5" fill="#c8a951"/>
+                  <path d="M8 13V10h3v3m2 0V10h3v3" stroke="#c8a951" strokeWidth="2" strokeLinecap="round"/>
+                  <circle cx="19.5" cy="14.5" r="1" fill="#FFD700" opacity="0.9"/>
+                </svg>
+                <div className="absolute top-1/2 left-full w-48 h-2 bg-gradient-to-r from-yellow-300 via-yellow-400/50 to-transparent opacity-80 blur-sm"></div>
               </div>
             </div>
-            <h1 className="text-5xl font-black text-[#c8a951] mb-4">Dashboard Indicators</h1>
-            <p className="text-xl text-gray-400">Select a level to play</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {Array.from({ length: levelInfo.totalLevels }, (_, i) => i + 1).map((level) => {
-              const isUnlocked = level <= levelInfo.currentLevel;
-              const isCurrent = level === levelInfo.currentLevel;
-
-              return (
+              <div className="absolute inset-0">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#c8a951]/5 rounded-full blur-3xl animate-pulse delay-700"></div>
+              </div>
+      
+              <div className="relative z-10 w-full max-w-5xl">
                 <button
-                  key={level}
-                  onClick={() => isUnlocked && fetchQuestionsForLevel(level)}
-                  disabled={!isUnlocked}
-                  className={`relative p-8 rounded-2xl border-2 transition-all duration-300 ${
-                    isUnlocked
-                      ? `border-[#c8a951]/50 bg-gradient-to-br ${LEVEL_BG_COLORS[level]}/10 hover:scale-105 hover:border-[#c8a951] hover:shadow-[0_0_30px_rgba(200,169,81,0.3)] cursor-pointer`
-                      : "border-gray-800 bg-gray-900/50 cursor-not-allowed opacity-50"
-                  }`}
+                  onClick={() => router.push("/game")}
+                  className="absolute top-0 left-0 flex items-center gap-2 border-2 border-[var(--accent)]/30 text-[var(--accent)] px-5 py-2.5 rounded-xl hover:bg-[var(--accent)] hover:text-black hover:border-[var(--accent)] transition-all duration-300 hover:scale-105 font-semibold backdrop-blur-sm"
                 >
-                  {isCurrent && (
-                    <div className="absolute -top-3 -right-3 px-3 py-1 bg-[#c8a951] text-black text-xs font-bold rounded-full flex items-center gap-1">
-                      <Gauge className="w-3 h-3" />
-                      Current
-                    </div>
-                  )}
-
-                  <div className="flex flex-col items-center gap-4">
-                    {isUnlocked ? (
-                      <Star className={`w-12 h-12 ${LEVEL_COLORS[level]}`} />
-                    ) : (
-                      <Lock className="w-12 h-12 text-gray-600" />
-                    )}
-                    
-                    <div className="text-center">
-                      <div className={`text-3xl font-bold mb-2 ${
-                        isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
-                      }`}>
-                        Level {level}
-                      </div>
-                      <div className={`text-lg font-semibold ${
-                        isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
-                      }`}>
-                        {LEVEL_NAMES[level]}
-                      </div>
-                    </div>
-
-                    {!isUnlocked && (
-                      <div className="text-sm text-gray-500 mt-2">
-                        Complete Level {level - 1} to unlock
-                      </div>
-                    )}
-                  </div>
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      </main>
+                <div className="text-center mb-12">
+                  <div className="flex justify-center mb-6">
+                    <div className="inline-flex items-center gap-2 bg-[#c8a951]/10 px-6 py-2 rounded-full border border-[#c8a951]/30 backdrop-blur-md mb-4 animate-float">
+                    <Sparkles className="w-5 h-5 text-[#c8a951] animate-pulse" />
+                  <span className="text-[#c8a951] font-semibold text-sm tracking-wider uppercase">Select Your Level</span>
+                </div>
+                  </div>
+                  <h1 className="text-5xl font-black text-[#c8a951] mb-4">Dashboard Indicators</h1>
+                  <p className="text-xl text-gray-400">Select a level to play</p>
+                </div>
+      
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {Array.from({ length: levelInfo.totalLevels }, (_, i) => i + 1).map((level) => {
+                    const isUnlocked = level <= levelInfo.currentLevel;
+                    const isCurrent = level === levelInfo.currentLevel;
+      
+                    return (
+                      <button
+                        key={level}
+                        onClick={() => isUnlocked && fetchQuestionsForLevel(level)}
+                        disabled={!isUnlocked}
+                        className={`relative p-8 rounded-2xl border-2 transition-all duration-300 ${
+                          isUnlocked
+                            ? `border-[#c8a951]/50 bg-gradient-to-br ${LEVEL_BG_COLORS[level]}/10 hover:scale-105 hover:border-[#c8a951] hover:shadow-[0_0_30px_rgba(200,169,81,0.3)] cursor-pointer`
+                            : "border-gray-800 bg-gray-900/50 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        {isCurrent && (
+                          <div className="absolute -top-3 -right-3 px-3 py-1 bg-[#c8a951] text-black text-xs font-bold rounded-full flex items-center gap-1">
+                            <Trophy className="w-3 h-3" />
+                            Current
+                          </div>
+                        )}
+      
+                        <div className="flex flex-col items-center gap-4">
+                          {isUnlocked ? (
+                            <Star className={`w-12 h-12 ${LEVEL_COLORS[level]}`} />
+                          ) : (
+                            <Lock className="w-12 h-12 text-gray-600" />
+                          )}
+                          
+                          <div className="text-center">
+                            <div className={`text-3xl font-bold mb-2 ${
+                              isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
+                            }`}>
+                              Level {level}
+                            </div>
+                            <div className={`text-lg font-semibold ${
+                              isUnlocked ? LEVEL_COLORS[level] : "text-gray-600"
+                            }`}>
+                              {LEVEL_NAMES[level]}
+                            </div>
+                          </div>
+      
+                          {!isUnlocked && (
+                            <div className="text-sm text-gray-500 mt-2">
+                              Complete Level {level - 1} to unlock
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <style jsx>{`
+          @keyframes roadLine {
+            0% { transform: translateY(-150px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+          }
+
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+
+          @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+
+          .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+          }
+        `}</style>
+            </main>
     );
   }
 
@@ -395,7 +487,7 @@ const handleAnswer = (option: string) => {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <Gauge className="w-20 h-20 text-[#c8a951] mx-auto mb-4" />
+          <Trophy className="w-20 h-20 text-[#c8a951] mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-[#c8a951] mb-4">🎉 Congratulations!</h2>
           <p className="text-xl text-gray-300 mb-6">You've completed all levels!</p>
           <button
@@ -440,8 +532,8 @@ const handleAnswer = (option: string) => {
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#c8a951]/30 py-4 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <button
-            onClick={backToLevelSelect}
-            className="flex items-center gap-2 border-2 border-[#c8a951]/30 text-[#c8a951] px-5 py-2.5 rounded-xl hover:bg-[#c8a951] hover:text-black hover:border-[#c8a951] transition-all duration-300 font-semibold"
+            onClick={() => router.push("/game")}
+            className="absolute top-0 left-0 flex items-center gap-2 border-2 border-[var(--accent)]/30 text-[var(--accent)] px-5 py-2.5 rounded-xl hover:bg-[var(--accent)] hover:text-black hover:border-[var(--accent)] transition-all duration-300 hover:scale-105 font-semibold backdrop-blur-sm shadow-lg"
           >
             <ArrowLeft className="w-5 h-5" />
             Back
@@ -518,7 +610,7 @@ const handleAnswer = (option: string) => {
 
             <div className="flex justify-center mb-8">
               <div className="p-6 rounded-full bg-[#c8a951]/10 border-4 border-[#c8a951] animate-pulse">
-                <Gauge className="w-16 h-16 text-[#c8a951]" />
+                <Trophy className="w-16 h-16 text-[#c8a951]" />
               </div>
             </div>
 
@@ -576,6 +668,45 @@ const handleAnswer = (option: string) => {
                 >
                   Level Select
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showExplanation && (
+          <div className={`mt-6 p-6 rounded-xl border-2 ${
+            selected === question.correct 
+              ? 'bg-green-500/10 border-green-500' 
+              : 'bg-blue-500/10 border-blue-500'
+          } animate-fade-in`}>
+            <div className="flex items-start gap-3">
+              <div className={`p-2 rounded-lg ${
+                selected === question.correct ? 'bg-green-500' : 'bg-blue-500'
+              }`}>
+                {selected === question.correct ? (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <h4 className={`font-bold mb-2 ${
+                  selected === question.correct ? 'text-green-400' : 'text-blue-400'
+                }`}>
+                  {selected === question.correct ? 'Correct!' : 'Learn More'}
+                </h4>
+                <p className="text-gray-300 leading-relaxed">
+                  {currentExplanation}
+                </p>
+                {selected !== question.correct && (
+                  <p className="mt-3 text-sm text-gray-400">
+                    <span className="font-semibold text-green-400">Correct answer:</span> {question.correct}
+                  </p>
+                )}
               </div>
             </div>
           </div>

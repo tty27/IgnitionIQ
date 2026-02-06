@@ -68,51 +68,93 @@ export const api = {
 
   // Get user rank
   async getMyRank(token: string) {
-    const response = await fetch(`${API_URL}/api/leaderboard/my-rank`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    try {
+      const response = await fetch(`${API_URL}/api/leaderboard/my-rank`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch rank:', response.status);
+        return null; // Return null if user has no rank yet
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch rank');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching rank:', error);
+      return null;
     }
-
-    return response.json();
   },
 
   // Get incorrect answers for review
   async getIncorrectAnswers(token: string, category?: string, limit = 50) {
-    const endpoint = category 
-      ? `/api/review/incorrect?category=${category}&limit=${limit}`
-      : `/api/review/incorrect?limit=${limit}`;
+    try {
+      const endpoint = category 
+        ? `/api/review/incorrect?category=${category}&limit=${limit}`
+        : `/api/review/incorrect?limit=${limit}`;
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        // If it's a 404 or server error, return empty array instead of throwing
+        console.warn('Failed to fetch incorrect answers:', response.status);
+        return [];
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch review data');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching incorrect answers:', error);
+      return []; // Return empty array on error
     }
-
-    return response.json();
   },
 
   // Get performance analytics
   async getPerformanceAnalytics(token: string) {
-    const response = await fetch(`${API_URL}/api/review/analytics`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    try {
+      const response = await fetch(`${API_URL}/api/review/analytics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch analytics:', response.status);
+        // Return default analytics structure
+        return {
+          overall: {
+            total_attempts: 0,
+            correct_answers: 0,
+            accuracy_percentage: 0
+          },
+          categories: [],
+          difficultQuestions: [],
+          recentProgress: []
+        };
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch analytics');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      // Return default analytics structure on error
+      return {
+        overall: {
+          total_attempts: 0,
+          correct_answers: 0,
+          accuracy_percentage: 0
+        },
+        categories: [],
+        difficultQuestions: [],
+        recentProgress: []
+      };
     }
-
-    return response.json();
   }
 };
 

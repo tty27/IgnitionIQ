@@ -46,9 +46,6 @@ function calculateCategoryLevel(categoryXp) {
   return 5;                               // Master
 }
 
-// backend/controllers/levelController.js (PARTIAL UPDATE)
-// Replace the getQuestionsByLevel function with this updated version
-
 exports.getQuestionsByLevel = async (req, res) => {
   try {
     const { category, level: levelParam } = req.params;
@@ -121,7 +118,7 @@ exports.getQuestionsByLevel = async (req, res) => {
           image: q.image_url,
           options: options.map(o => o.option_text),
           correct: q.correct_answer,
-          explanation: q.explanation // NEW: Include explanation
+          explanation: q.explanation
         };
       })
     );
@@ -138,10 +135,10 @@ exports.getQuestionsByLevel = async (req, res) => {
   }
 };
 
-// Save result with XP calculation
+// Save result with XP calculation AND answer history
 exports.saveResultWithXP = async (req, res) => {
   try {
-    const { category, score, totalQuestions, timeTaken, level } = req.body;
+    const { category, score, totalQuestions, timeTaken, level, answers } = req.body;
     const userId = req.user.userId;
 
     // Validation
@@ -176,6 +173,30 @@ exports.saveResultWithXP = async (req, res) => {
       'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken, xp_earned, difficulty_level) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [userId, categoryId, score, totalQuestions, timeTaken, totalXpEarned, quizLevel]
     );
+
+    const quizResultId = result.insertId;
+
+    // Save individual answers for review (if provided)
+    if (answers && Array.isArray(answers)) {
+      for (const answer of answers) {
+        try {
+          await db.query(
+            'INSERT INTO user_answer_history (user_id, question_id, user_answer, is_correct, time_taken, quiz_result_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+              userId,
+              answer.questionId,
+              answer.userAnswer,
+              answer.isCorrect ? 1 : 0,
+              answer.timeTaken || null,
+              quizResultId
+            ]
+          );
+        } catch (err) {
+          console.error('Error saving answer history:', err);
+          // Continue even if saving answer history fails
+        }
+      }
+    }
 
     // Update user's total XP and level
     await db.query(

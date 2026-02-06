@@ -1,6 +1,3 @@
-// backend/middleware/rateLimiter.js
-
-// Simple in-memory rate limiter (for production, use Redis)
 const rateLimitStore = new Map();
 
 // Clean up old entries every 15 minutes
@@ -69,11 +66,11 @@ module.exports = {
     'Too many quiz attempts. Please try again later.'
   ),
 
-  // Auth routes: 5 per 15 minutes
+  // Auth routes: INCREASED to 20 per 5 minutes (more reasonable for login/signup)
   authLimiter: createRateLimiter(
-    5, 
-    15 * 60 * 1000, 
-    'Too many authentication attempts. Please try again later.'
+    50, 
+    5 * 60 * 1000, 
+    'Too many authentication attempts. Please try again in a few minutes.'
   ),
 
   // API routes: 100 per 15 minutes
