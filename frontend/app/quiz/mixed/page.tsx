@@ -154,6 +154,7 @@ function MixedModeQuizContent() {
   if (selected) return; // prevent double click
 
   setSelected(option);
+  setAnsweredQuestions(prev => prev + 1);
 
   if (option === question.correct) {
     setScore(score + 1);
