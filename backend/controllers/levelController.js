@@ -25,7 +25,6 @@ const XP_FOR_LEVEL = {
   10: 10000
 };
 
-// Calculate user level based on total XP
 function calculateUserLevel(totalXp) {
   let level = 1;
   for (let l = 10; l >= 1; l--) {
@@ -37,14 +36,76 @@ function calculateUserLevel(totalXp) {
   return level;
 }
 
-// Calculate category level based on category XP
 function calculateCategoryLevel(categoryXp) {
-  if (categoryXp < 100) return 1;        // Beginner
-  if (categoryXp < 300) return 2;        // Intermediate
-  if (categoryXp < 600) return 3;        // Advanced
-  if (categoryXp < 1000) return 4;       // Expert
-  return 5;                               // Master
+  if (categoryXp < 100) return 1;
+  if (categoryXp < 300) return 2;
+  if (categoryXp < 600) return 3;
+  if (categoryXp < 1000) return 4;
+  return 5;
 }
+
+// Get mixed questions from all categories
+exports.getMixedQuestions = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get all categories
+    const [categories] = await db.query('SELECT id FROM quiz_categories');
+    
+    if (categories.length === 0) {
+      return res.status(404).json({ error: 'No categories found' });
+    }
+
+    const categoryIds = categories.map(c => c.id);
+    
+    // Get 50 random questions from all categories (mixed levels)
+    const placeholders = categoryIds.map(() => '?').join(',');
+    const [questions] = await db.query(
+      `SELECT q.id, q.question, q.image_url, q.correct_answer, q.explanation, c.name as category_name
+       FROM questions q
+       JOIN quiz_categories c ON q.category_id = c.id
+       WHERE q.category_id IN (${placeholders})
+       ORDER BY RAND()
+       LIMIT 50`,
+      categoryIds
+    );
+
+    if (questions.length === 0) {
+      return res.json({ 
+        questions: [],
+        message: 'No questions available'
+      });
+    }
+
+    // Get options for each question
+    const questionsWithOptions = await Promise.all(
+      questions.map(async (q) => {
+        const [options] = await db.query(
+          'SELECT option_text FROM question_options WHERE question_id = ? ORDER BY option_order',
+          [q.id]
+        );
+
+        return {
+          id: q.id,
+          question: q.question,
+          image: q.image_url,
+          options: options.map(o => o.option_text),
+          correct: q.correct_answer,
+          explanation: q.explanation,
+          category: q.category_name
+        };
+      })
+    );
+
+    res.json({
+      questions: questionsWithOptions
+    });
+
+  } catch (error) {
+    console.error('Error in getMixedQuestions:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+};
 
 exports.getQuestionsByLevel = async (req, res) => {
   try {
@@ -141,60 +202,100 @@ exports.saveResultWithXP = async (req, res) => {
     const { category, score, totalQuestions, timeTaken, level, answers } = req.body;
     const userId = req.user.userId;
 
+    console.log('Saving result:', { category, score, totalQuestions, userId }); // Debug log
+
     // Validation
     if (!category || score === undefined || !totalQuestions) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get category ID
-    const [categories] = await db.query(
-      'SELECT id FROM quiz_categories WHERE slug = ?',
-      [category]
-    );
-
-    if (categories.length === 0) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
-
-    const categoryId = categories[0].id;
     const quizLevel = level || 1;
 
     // Calculate XP earned
     const baseXp = score * XP_PER_CORRECT_ANSWER;
-    const multiplier = XP_MULTIPLIERS[quizLevel] || 1.0;
+    const multiplier = category === 'mixed' ? 1.5 : (XP_MULTIPLIERS[quizLevel] || 1.0);
     const xpEarned = Math.floor(baseXp * multiplier);
 
     // Perfect score bonus
-    const perfectBonus = (score === totalQuestions) ? Math.floor(xpEarned * 0.5) : 0;
+    const perfectBonus = (score === totalQuestions && totalQuestions > 0) ? Math.floor(xpEarned * 0.5) : 0;
     const totalXpEarned = xpEarned + perfectBonus;
 
-    // Save quiz result
-    const [result] = await db.query(
-      'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken, xp_earned, difficulty_level) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, categoryId, score, totalQuestions, timeTaken, totalXpEarned, quizLevel]
-    );
+    let quizResultId;
 
-    const quizResultId = result.insertId;
+    // Handle mixed mode vs regular categories
+    if (category === 'mixed') {
+      // SAVE MIXED MODE RESULT WITH NULL category_id
+      const [result] = await db.query(
+        'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken, xp_earned, difficulty_level) VALUES (?, NULL, ?, ?, ?, ?, ?)',
+        [userId, score, totalQuestions, timeTaken, totalXpEarned, 1]
+      );
+      quizResultId = result.insertId;
+      console.log('Mixed mode result saved with ID:', quizResultId); // Debug log
 
-    // Save individual answers for review (if provided)
-    if (answers && Array.isArray(answers)) {
-      for (const answer of answers) {
-        try {
-          await db.query(
-            'INSERT INTO user_answer_history (user_id, question_id, user_answer, is_correct, time_taken, quiz_result_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [
-              userId,
-              answer.questionId,
-              answer.userAnswer,
-              answer.isCorrect ? 1 : 0,
-              answer.timeTaken || null,
-              quizResultId
-            ]
-          );
-        } catch (err) {
-          console.error('Error saving answer history:', err);
-          // Continue even if saving answer history fails
+    } else {
+      // Regular category handling
+      const [categories] = await db.query(
+        'SELECT id FROM quiz_categories WHERE slug = ?',
+        [category]
+      );
+
+      if (categories.length === 0) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+
+      const categoryId = categories[0].id;
+
+      const [result] = await db.query(
+        'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken, xp_earned, difficulty_level) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userId, categoryId, score, totalQuestions, timeTaken, totalXpEarned, quizLevel]
+      );
+
+      quizResultId = result.insertId;
+
+      // Save individual answers for review (if provided)
+      if (answers && Array.isArray(answers)) {
+        for (const answer of answers) {
+          try {
+            await db.query(
+              'INSERT INTO user_answer_history (user_id, question_id, user_answer, is_correct, time_taken, quiz_result_id) VALUES (?, ?, ?, ?, ?, ?)',
+              [
+                userId,
+                answer.questionId,
+                answer.userAnswer,
+                answer.isCorrect ? 1 : 0,
+                answer.timeTaken || null,
+                quizResultId
+              ]
+            );
+          } catch (err) {
+            console.error('Error saving answer history:', err);
+          }
         }
+      }
+
+      // Update category progress
+      const [categoryProgress] = await db.query(
+        'SELECT xp, current_level, highest_score FROM user_category_progress WHERE user_id = ? AND category_id = ?',
+        [userId, categoryId]
+      );
+
+      if (categoryProgress.length === 0) {
+        // Create new progress entry
+        const newCategoryLevel = calculateCategoryLevel(totalXpEarned);
+        await db.query(
+          'INSERT INTO user_category_progress (user_id, category_id, current_level, xp, highest_score) VALUES (?, ?, ?, ?, ?)',
+          [userId, categoryId, newCategoryLevel, totalXpEarned, score]
+        );
+      } else {
+        // Update existing progress
+        const newCategoryXp = categoryProgress[0].xp + totalXpEarned;
+        const newCategoryLevel = calculateCategoryLevel(newCategoryXp);
+        const newHighScore = Math.max(categoryProgress[0].highest_score, score);
+
+        await db.query(
+          'UPDATE user_category_progress SET xp = ?, current_level = ?, highest_score = ? WHERE user_id = ? AND category_id = ?',
+          [newCategoryXp, newCategoryLevel, newHighScore, userId, categoryId]
+        );
       }
     }
 
@@ -206,51 +307,25 @@ exports.saveResultWithXP = async (req, res) => {
 
     // Get updated total XP
     const [userXp] = await db.query(
-      'SELECT total_xp FROM users WHERE id = ?',
+      'SELECT total_xp, level FROM users WHERE id = ?',
       [userId]
     );
 
     const newTotalXp = userXp[0].total_xp;
+    const oldLevel = userXp[0].level;
     const newUserLevel = calculateUserLevel(newTotalXp);
 
-    // Update user level
-    await db.query(
-      'UPDATE users SET level = ? WHERE id = ?',
-      [newUserLevel, userId]
-    );
-
-    // Update category progress
-    const [categoryProgress] = await db.query(
-      'SELECT xp, current_level, highest_score FROM user_category_progress WHERE user_id = ? AND category_id = ?',
-      [userId, categoryId]
-    );
-
-    if (categoryProgress.length === 0) {
-      // Create new progress entry
-      const newCategoryLevel = calculateCategoryLevel(totalXpEarned);
+    // Update user level if changed
+    if (newUserLevel > oldLevel) {
       await db.query(
-        'INSERT INTO user_category_progress (user_id, category_id, current_level, xp, highest_score) VALUES (?, ?, ?, ?, ?)',
-        [userId, categoryId, newCategoryLevel, totalXpEarned, score]
-      );
-    } else {
-      // Update existing progress
-      const newCategoryXp = categoryProgress[0].xp + totalXpEarned;
-      const newCategoryLevel = calculateCategoryLevel(newCategoryXp);
-      const newHighScore = Math.max(categoryProgress[0].highest_score, score);
-
-      await db.query(
-        'UPDATE user_category_progress SET xp = ?, current_level = ?, highest_score = ? WHERE user_id = ? AND category_id = ?',
-        [newCategoryXp, newCategoryLevel, newHighScore, userId, categoryId]
+        'UPDATE users SET level = ? WHERE id = ?',
+        [newUserLevel, userId]
       );
     }
 
-    // Check for level up
-    const [oldUserData] = await db.query(
-      'SELECT level FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    const leveledUp = newUserLevel > (oldUserData[0].level || 1);
+    const leveledUp = newUserLevel > oldLevel;
+
+    console.log('Result saved successfully:', { xpEarned: totalXpEarned, newUserLevel, leveledUp }); // Debug log
 
     res.status(201).json({
       message: 'Result saved successfully',
@@ -262,8 +337,8 @@ exports.saveResultWithXP = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error saving result:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
 
@@ -324,6 +399,8 @@ exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
 
+    console.log('Getting profile for user:', userId); // Debug log
+
     // Get user data
     const [users] = await db.query(
       'SELECT id, name, email, total_xp, level, created_at FROM users WHERE id = ?',
@@ -348,17 +425,30 @@ exports.getUserProfile = async (req, res) => {
       LEFT JOIN user_category_progress p ON c.id = p.category_id AND p.user_id = ?
     `, [userId]);
 
-    // Get total quizzes completed
+    // Get total quizzes completed (including mixed mode)
     const [quizStats] = await db.query(
       'SELECT COUNT(*) as total_quizzes, SUM(score) as total_correct FROM user_quiz_results WHERE user_id = ?',
       [userId]
     );
 
+    // Get mixed mode stats with debug logging
+    const [mixedStats] = await db.query(
+      `SELECT 
+        COUNT(*) as total_attempts,
+        MAX(score) as best_score,
+        MAX(total_questions) as max_questions_answered
+      FROM user_quiz_results 
+      WHERE user_id = ? AND category_id IS NULL`,
+      [userId]
+    );
+
+    console.log('Mixed mode stats from DB:', mixedStats[0]); // Debug log
+
     // Calculate next level XP
     const nextLevelXp = XP_FOR_LEVEL[user.level + 1] || null;
     const xpToNextLevel = nextLevelXp ? nextLevelXp - user.total_xp : 0;
 
-    res.json({
+    const profileData = {
       user: {
         id: user.id,
         name: user.name,
@@ -370,15 +460,24 @@ exports.getUserProfile = async (req, res) => {
         memberSince: user.created_at
       },
       stats: {
-        totalQuizzes: quizStats[0].total_quizzes,
-        totalCorrect: quizStats[0].total_correct
+        totalQuizzes: quizStats[0].total_quizzes || 0,
+        totalCorrect: quizStats[0].total_correct || 0
       },
-      categories: categoryProgress
-    });
+      categories: categoryProgress,
+      mixedMode: {
+        attempts: mixedStats[0].total_attempts || 0,
+        bestScore: mixedStats[0].best_score || 0,
+        maxQuestionsAnswered: mixedStats[0].max_questions_answered || 0
+      }
+    };
+
+    console.log('Returning profile data:', JSON.stringify(profileData, null, 2)); // Debug log
+
+    res.json(profileData);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in getUserProfile:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
 

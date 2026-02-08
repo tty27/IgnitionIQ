@@ -1,5 +1,6 @@
 "use client";
-import { ArrowLeft, TrafficCone, Gauge, Wrench, Sparkles, Zap } from "lucide-react";
+
+import { ArrowLeft, TrafficCone, Gauge, Wrench, Sparkles, Zap, Flame } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -54,6 +55,16 @@ export default function GameMode() {
       gradient: "from-purple-500 to-pink-500",
       shadowColor: "shadow-purple-500/50",
       glowColor: "purple"
+    },
+    {
+      name: "mixed",
+      title: "Mixed Challenge",
+      desc: "90-second speed round! Answer questions from all categories.",
+      icon: Flame,
+      gradient: "from-orange-500 to-red-500",
+      shadowColor: "shadow-orange-500/50",
+      glowColor: "orange",
+      badge: "NEW"
     },
   ];
 
@@ -179,7 +190,7 @@ export default function GameMode() {
         </div>
 
         {/* Game Mode Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {modes.map((mode, index) => {
             const Icon = mode.icon;
             return (
@@ -189,6 +200,13 @@ export default function GameMode() {
                 className="group relative bg-gradient-to-b from-white/5 to-transparent rounded-3xl p-10 border-2 border-white/10 hover:border-[var(--accent)] transition-all duration-500 hover:scale-105 backdrop-blur-sm text-left overflow-hidden"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
+                {/* Badge for new modes */}
+                {mode.badge && (
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                    {mode.badge}
+                  </div>
+                )}
+
                 {/* Hover Gradient Background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${mode.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                 
@@ -216,7 +234,7 @@ export default function GameMode() {
 
                   {/* Action Indicator */}
                   <div className="flex items-center gap-2 text-[#c8a951] font-semibold group-hover:gap-4 transition-all duration-300">
-                    <span>Start Quiz</span>
+                    <span>Start {mode.name === 'mixed' ? 'Challenge' : 'Quiz'}</span>
                     <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
 

@@ -55,8 +55,6 @@ function RoadSignsQuizContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showLevelSelect, setShowLevelSelect] = useState(true);
-    const [showExplanation, setShowExplanation] = useState(false);
-    const [currentExplanation, setCurrentExplanation] = useState('');
     
     const [readyPhase, setReadyPhase] = useState(true);
     const [countdown, setCountdown] = useState(3);
@@ -202,30 +200,27 @@ function RoadSignsQuizContent() {
     }
   };
 
-const handleAnswer = (option: string) => {
-  setSelected(option);
-  const isCorrect = option === question.correct;
-  
-  // Show explanation
-  setCurrentExplanation(question.explanation || 'No explanation available');
-  setShowExplanation(true);
-  
-  if (isCorrect) {
-    setScore((prev) => prev + 1);
-  }
-  
-  // Wait longer to show explanation before moving to next question
-  setTimeout(() => {
-    setShowExplanation(false);
-    if (current + 1 < questions.length) {
-      setCurrent(current + 1);
-      setSelected(null);
-    } else {
-      setShowResult(true);
-      saveResult();
+  const handleAnswer = (option: string) => {
+    if (selected) return; // prevent double click
+
+    setSelected(option);
+
+    if (option === question.correct) {
+      setScore(score + 1);
     }
-  }, 3000); // 3 seconds to read explanation
-};
+
+    // short delay so user can see red/green
+    setTimeout(() => {
+      if (current + 1 < questions.length && timeLeft > 0) {
+        setCurrent(current + 1);
+        setSelected(null);
+      } else {
+        setShowResult(true);
+        saveResult();
+      }
+    }, 400);
+  };
+
 
   const restartQuiz = () => {
     setCurrent(0);
@@ -668,45 +663,6 @@ const handleAnswer = (option: string) => {
                 >
                   Level Select
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showExplanation && (
-          <div className={`mt-6 p-6 rounded-xl border-2 ${
-            selected === question.correct 
-              ? 'bg-green-500/10 border-green-500' 
-              : 'bg-blue-500/10 border-blue-500'
-          } animate-fade-in`}>
-            <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-lg ${
-                selected === question.correct ? 'bg-green-500' : 'bg-blue-500'
-              }`}>
-                {selected === question.correct ? (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className={`font-bold mb-2 ${
-                  selected === question.correct ? 'text-green-400' : 'text-blue-400'
-                }`}>
-                  {selected === question.correct ? 'Correct!' : 'Learn More'}
-                </h4>
-                <p className="text-gray-300 leading-relaxed">
-                  {currentExplanation}
-                </p>
-                {selected !== question.correct && (
-                  <p className="mt-3 text-sm text-gray-400">
-                    <span className="font-semibold text-green-400">Correct answer:</span> {question.correct}
-                  </p>
-                )}
               </div>
             </div>
           </div>

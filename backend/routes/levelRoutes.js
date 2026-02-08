@@ -7,6 +7,9 @@ const authenticateToken = require('../middleware/auth');
 const { quizLimiter } = require('../middleware/rateLimiter');
 const { validateQuizResult } = require('../middleware/validation');
 
+// Get mixed questions (all categories combined)
+router.get('/questions/mixed', authenticateToken, levelController.getMixedQuestions);
+
 // Get questions by category and specific level (this route must come FIRST)
 router.get('/questions/:category/:level', authenticateToken, levelController.getQuestionsByLevel);
 

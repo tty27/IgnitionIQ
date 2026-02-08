@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { ArrowLeft, Trophy, Award, Target, Star, Zap, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowLeft, Trophy, Award, Target, Star, Zap, TrendingUp, Sparkles, Flame } from "lucide-react";
 
 type CategoryProgress = {
   category_name: string;
@@ -29,6 +29,11 @@ type UserProfile = {
     totalCorrect: number;
   };
   categories: CategoryProgress[];
+  mixedMode?: {
+    attempts: number;
+    bestScore: number;
+    maxQuestionsAnswered: number;
+  };
 };
 
 const LEVEL_COLORS = ["", "text-gray-400", "text-blue-400", "text-purple-400", "text-orange-400", "text-yellow-400"];
@@ -68,6 +73,7 @@ function ProfileContent() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Profile data:', data); // Debug log
           setProfile(data);
         }
       } catch (error) {
@@ -194,7 +200,7 @@ function ProfileContent() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto">
+      <div className="relative z-10 max-w-7xl mx-auto">
         {/* Back Button */}
         <button
           onClick={() => router.push("/")}
@@ -266,47 +272,47 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Category Progress */}
+        {/* Category Progress - 2x2 Grid */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-8 h-8 text-[#c8a951]" />
             <h2 className="text-3xl font-bold bg-gradient-to-r from-[#c8a951] to-[#d9b85c] bg-clip-text text-transparent">Category Progress</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {profile.categories.map((category, index) => (
               <div
                 key={category.category_slug}
-                className="bg-gradient-to-b from-white/5 to-transparent border-2 border-white/10 rounded-2xl p-6 hover:border-[#c8a951]/50 transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(200,169,81,0.1)] backdrop-blur-sm"
+                className="bg-gradient-to-b from-white/5 to-transparent border-2 border-white/10 rounded-2xl p-8 hover:border-[#c8a951]/50 transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(200,169,81,0.1)] backdrop-blur-sm"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-xl font-bold text-white">{category.category_name}</h3>
-                  <div className={`px-3 py-1 rounded-full bg-[#c8a951]/10 border border-[#c8a951]/30 ${LEVEL_COLORS[category.current_level]}`}>
-                    <span className="text-xs font-bold">LVL {category.current_level}</span>
+                <div className="flex items-start justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white">{category.category_name}</h3>
+                  <div className={`px-4 py-2 rounded-full bg-[#c8a951]/10 border border-[#c8a951]/30 ${LEVEL_COLORS[category.current_level]}`}>
+                    <span className="text-sm font-bold">LVL {category.current_level}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Star className={`w-5 h-5 ${LEVEL_COLORS[category.current_level]}`} />
-                    <span className={`font-semibold ${LEVEL_COLORS[category.current_level]}`}>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Star className={`w-6 h-6 ${LEVEL_COLORS[category.current_level]}`} />
+                    <span className={`font-semibold text-lg ${LEVEL_COLORS[category.current_level]}`}>
                       {LEVEL_NAMES[category.current_level]}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">{category.xp} XP</span>
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-6 h-6 text-yellow-400" />
+                    <span className="text-gray-300 text-lg">{category.xp} XP</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-green-400" />
-                    <span className="text-gray-300">Best: {category.highest_score}/10</span>
+                  <div className="flex items-center gap-3">
+                    <Award className="w-6 h-6 text-green-400" />
+                    <span className="text-gray-300 text-lg">Best: {category.highest_score}/10</span>
                   </div>
 
-                  <div className="mt-4">
-                    <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden">
+                  <div className="mt-6">
+                    <div className="w-full h-3 bg-black/50 rounded-full overflow-hidden">
                       <div 
                         className={`h-full bg-gradient-to-r ${
                           category.current_level === 1 ? "from-gray-400 to-gray-500" :
@@ -322,13 +328,79 @@ function ProfileContent() {
 
                   <button
                     onClick={() => router.push(`/quiz/${category.category_slug}`)}
-                    className="w-full mt-4 py-2 bg-[#c8a951]/10 border border-[#c8a951]/30 text-[#c8a951] rounded-lg hover:bg-[#c8a951] hover:text-black transition-all font-semibold hover:scale-105"
+                    className="w-full mt-6 py-3 bg-[#c8a951]/10 border border-[#c8a951]/30 text-[#c8a951] rounded-lg hover:bg-[#c8a951] hover:text-black transition-all font-semibold hover:scale-105 text-lg"
                   >
                     Continue
                   </button>
                 </div>
               </div>
             ))}
+
+            {/* Mixed Mode Card */}
+            <div
+              className="bg-gradient-to-b from-orange-500/5 to-transparent border-2 border-orange-500/30 rounded-2xl p-8 hover:border-orange-500 transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(251,146,60,0.1)] backdrop-blur-sm"
+              style={{ animationDelay: `${profile.categories.length * 0.1}s` }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <h3 className="text-2xl font-bold text-white">Mixed Challenge</h3>
+                <div className="px-4 py-2 rounded-full bg-orange-500/20 border border-orange-500/40">
+                  <span className="text-sm font-bold text-orange-400">SPEED</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Flame className="w-6 h-6 text-orange-400" />
+                  <span className="font-semibold text-orange-400 text-lg">
+                    90 Second Challenge
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-6 h-6 text-yellow-400" />
+                  <span className="text-gray-300 text-lg">
+                    {profile.mixedMode?.attempts || 0} Attempts
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Award className="w-6 h-6 text-green-400" />
+                  <span className="text-gray-300 text-lg">
+                    Best: {profile.mixedMode?.bestScore || 0} Correct
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Zap className="w-6 h-6 text-blue-400" />
+                  <span className="text-gray-300 text-lg">
+                    Max: {profile.mixedMode?.maxQuestionsAnswered || 0} Questions
+                  </span>
+                </div>
+
+                <div className="mt-6">
+                  <div className="w-full h-3 bg-black/50 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-orange-400 to-red-500 transition-all duration-500 rounded-full"
+                      style={{ 
+                        width: `${profile.mixedMode?.maxQuestionsAnswered 
+                          ? Math.min((profile.mixedMode.maxQuestionsAnswered / 30) * 100, 100) 
+                          : 0}%` 
+                      }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Progress to 30 questions
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => router.push('/quiz/mixed')}
+                  className="w-full mt-6 py-3 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-500 hover:text-white transition-all font-semibold hover:scale-105 text-lg"
+                >
+                  Start Challenge
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

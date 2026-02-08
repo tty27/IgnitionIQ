@@ -19,14 +19,14 @@ exports.validateQuizResult = (req, res, next) => {
   }
 
   // Validate totalQuestions
-  if (totalQuestions < 1 || totalQuestions > 50) {
+  if (totalQuestions < 1 || totalQuestions > 100) { // Increased to 100 for mixed mode
     return res.status(400).json({ 
-      error: 'Invalid totalQuestions: must be between 1 and 50' 
+      error: 'Invalid totalQuestions: must be between 1 and 100' 
     });
   }
 
-  // Validate time taken (at least 2 seconds per question, max 10 minutes per question)
-  const minTime = totalQuestions * 2;
+  // Validate time taken (at least 1 seconds per question for mixed mode, max 10 minutes per question)
+  const minTime = category === 'mixed' ? 1 : totalQuestions * 2; // More lenient for mixed mode
   const maxTime = totalQuestions * 600;
   
   if (timeTaken && (timeTaken < minTime || timeTaken > maxTime)) {
@@ -43,7 +43,7 @@ exports.validateQuizResult = (req, res, next) => {
   }
 
   // Validate category format
-  const validCategories = ['road-signs', 'dashboard', 'car-knowledge'];
+  const validCategories = ['road-signs', 'dashboard', 'car-knowledge', 'mixed'];
   if (!validCategories.includes(category)) {
     return res.status(400).json({ 
       error: 'Invalid category' 
