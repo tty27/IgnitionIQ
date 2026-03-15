@@ -80,21 +80,6 @@ function Navigation() {
                 </button>
               </Link>
               
-              <Link href="/review">
-                <button className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c8a951]/10 to-[#d9b85c]/10 border-2 border-[#c8a951]/30 text-[#c8a951] hover:border-[#c8a951] hover:shadow-[0_0_20px_rgba(200,169,81,0.3)] transition-all duration-300 hover:scale-105 overflow-hidden shadow-lg">
-                  {/* Animated background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#c8a951]/20 to-[#d9b85c]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  {/* Icon with animation */}
-                  <BookOpen className="w-4 h-4 relative z-10 group-hover:-rotate-12 group-hover:scale-110 transition-transform duration-300" />
-                  
-                  {/* Text */}
-                  <span className="relative z-10 font-semibold">Review</span>
-                  
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                </button>
-              </Link>
 
               {/* User Profile Button with Enhanced Design */}
               <Link href="/profile">
@@ -195,15 +180,7 @@ function Footer() {
         <p className="text-xs text-gray-500 italic">
           Fuel Your Knowledge, Master the Road
         </p>
-        
-        {/* Links */}
-        <div className="flex items-center justify-center gap-6 mt-4 text-xs">
-          <a href="#" className="text-gray-500 hover:text-[#c8a951] transition-colors">Privacy Policy</a>
-          <span className="text-gray-700">•</span>
-          <a href="#" className="text-gray-500 hover:text-[#c8a951] transition-colors">Terms of Service</a>
-          <span className="text-gray-700">•</span>
-          <a href="#" className="text-gray-500 hover:text-[#c8a951] transition-colors">Contact</a>
-        </div>
+      
       </div>
 
       <style jsx>{`
