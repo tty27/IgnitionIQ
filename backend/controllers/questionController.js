@@ -1,12 +1,9 @@
-// backend/controllers/questionController.js
 const db = require('../config/database');
 
-// Get all questions for a specific category
 exports.getQuestionsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    // Get category ID
     const [categories] = await db.query(
       'SELECT id FROM quiz_categories WHERE slug = ?',
       [category]
@@ -18,13 +15,11 @@ exports.getQuestionsByCategory = async (req, res) => {
 
     const categoryId = categories[0].id;
 
-    // Get questions WITH EXPLANATION
     const [questions] = await db.query(
       'SELECT id, question, image_url, correct_answer, explanation FROM questions WHERE category_id = ?',
       [categoryId]
     );
 
-    // Get options for each question
     const questionsWithOptions = await Promise.all(
       questions.map(async (q) => {
         const [options] = await db.query(
@@ -38,7 +33,7 @@ exports.getQuestionsByCategory = async (req, res) => {
           image: q.image_url,
           options: options.map(o => o.option_text),
           correct: q.correct_answer,
-          explanation: q.explanation // NEW: Include explanation
+          explanation: q.explanation 
         };
       })
     );
@@ -51,7 +46,6 @@ exports.getQuestionsByCategory = async (req, res) => {
   }
 };
 
-// Get all categories
 exports.getAllCategories = async (req, res) => {
   try {
     const [categories] = await db.query(

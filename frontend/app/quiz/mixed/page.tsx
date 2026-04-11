@@ -151,7 +151,7 @@ function MixedModeQuizContent() {
   };
 
   const handleAnswer = (option: string) => {
-  if (selected) return; // prevent double click
+  if (selected) return;
 
   setSelected(option);
   setAnsweredQuestions(prev => prev + 1);
@@ -253,7 +253,6 @@ function MixedModeQuizContent() {
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Enhanced Background */}
       <div className="fixed inset-0 z-0">
         <div 
           className="absolute inset-0 opacity-20"
@@ -283,7 +282,6 @@ function MixedModeQuizContent() {
           }}
         ></div>
 
-        {/* Road Lines */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(8)].map((_, i) => (
             <div
@@ -312,7 +310,6 @@ function MixedModeQuizContent() {
         </div>
       </div>
 
-      {/* Animated Car */}
       <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{

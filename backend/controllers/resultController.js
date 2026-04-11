@@ -1,17 +1,14 @@
 const db = require('../config/database');
 
-// Save quiz result
 exports.saveResult = async (req, res) => {
   try {
     const { category, score, totalQuestions, timeTaken } = req.body;
     const userId = req.user.userId;
 
-    // Validation
     if (!category || score === undefined || !totalQuestions) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get category ID
     const [categories] = await db.query(
       'SELECT id FROM quiz_categories WHERE slug = ?',
       [category]
@@ -23,7 +20,6 @@ exports.saveResult = async (req, res) => {
 
     const categoryId = categories[0].id;
 
-    // Insert result
     const [result] = await db.query(
       'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken) VALUES (?, ?, ?, ?, ?)',
       [userId, categoryId, score, totalQuestions, timeTaken]
@@ -40,7 +36,6 @@ exports.saveResult = async (req, res) => {
   }
 };
 
-// Get user's quiz history
 exports.getUserResults = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -68,7 +63,6 @@ exports.getUserResults = async (req, res) => {
   }
 };
 
-// Get user statistics
 exports.getUserStats = async (req, res) => {
   try {
     const userId = req.user.userId;

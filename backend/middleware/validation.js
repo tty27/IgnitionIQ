@@ -1,32 +1,25 @@
-// backend/middleware/validation.js
-
-// Validate quiz result submission
 exports.validateQuizResult = (req, res, next) => {
   const { category, score, totalQuestions, timeTaken, level } = req.body;
 
-  // Check required fields
   if (!category || score === undefined || !totalQuestions) {
     return res.status(400).json({ 
       error: 'Missing required fields: category, score, totalQuestions' 
     });
   }
 
-  // Validate score range
   if (score < 0 || score > totalQuestions) {
     return res.status(400).json({ 
       error: 'Invalid score: must be between 0 and totalQuestions' 
     });
   }
 
-  // Validate totalQuestions
-  if (totalQuestions < 1 || totalQuestions > 100) { // Increased to 100 for mixed mode
+  if (totalQuestions < 1 || totalQuestions > 100) { 
     return res.status(400).json({ 
       error: 'Invalid totalQuestions: must be between 1 and 100' 
     });
   }
 
-  // Validate time taken (at least 1 seconds per question for mixed mode, max 10 minutes per question)
-  const minTime = category === 'mixed' ? 1 : totalQuestions * 2; // More lenient for mixed mode
+  const minTime = category === 'mixed' ? 1 : totalQuestions * 2;
   const maxTime = totalQuestions * 600;
   
   if (timeTaken && (timeTaken < minTime || timeTaken > maxTime)) {
@@ -35,14 +28,12 @@ exports.validateQuizResult = (req, res, next) => {
     });
   }
 
-  // Validate level
   if (level && (level < 1 || level > 5)) {
     return res.status(400).json({ 
       error: 'Invalid level: must be between 1 and 5' 
     });
   }
 
-  // Validate category format
   const validCategories = ['road-signs', 'dashboard', 'car-knowledge', 'mixed'];
   if (!validCategories.includes(category)) {
     return res.status(400).json({ 
@@ -53,25 +44,21 @@ exports.validateQuizResult = (req, res, next) => {
   next();
 };
 
-// Validate registration input
 exports.validateRegistration = (req, res, next) => {
   const { name, email, password } = req.body;
 
-  // Check required fields
   if (!name || !email || !password) {
     return res.status(400).json({ 
       error: 'All fields are required: name, email, password' 
     });
   }
 
-  // Validate name length
   if (name.length < 2 || name.length > 50) {
     return res.status(400).json({ 
       error: 'Name must be between 2 and 50 characters' 
     });
   }
 
-  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ 
@@ -79,7 +66,6 @@ exports.validateRegistration = (req, res, next) => {
     });
   }
 
-  // Validate password strength
   if (password.length < 6) {
     return res.status(400).json({ 
       error: 'Password must be at least 6 characters' 
@@ -95,7 +81,6 @@ exports.validateRegistration = (req, res, next) => {
   next();
 };
 
-// Validate login input
 exports.validateLogin = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -105,7 +90,6 @@ exports.validateLogin = (req, res, next) => {
     });
   }
 
-  // Basic email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ 

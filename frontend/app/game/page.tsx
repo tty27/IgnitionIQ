@@ -73,9 +73,7 @@ export default function GameMode() {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center bg-black text-[var(--foreground)] py-20 px-6 overflow-hidden">
-      {/* Enhanced Animated Background */}
       <div className="fixed inset-0 z-0">
-        {/* Pattern Background */}
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -84,10 +82,8 @@ export default function GameMode() {
           }}
         />
 
-        {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
-        
-        {/* Floating Orbs with Mouse Parallax */}
+
         <div 
           className="absolute w-96 h-96 bg-[#c8a951]/10 rounded-full blur-3xl animate-pulse"
           style={{
@@ -106,7 +102,6 @@ export default function GameMode() {
           }}
         ></div>
 
-        {/* Road Lines - Both Sides */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(8)].map((_, i) => (
             <div
@@ -135,7 +130,6 @@ export default function GameMode() {
         </div>
       </div>
 
-      {/* Animated Car Icon */}
       <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{
@@ -169,7 +163,6 @@ export default function GameMode() {
           Back
         </button>
 
-        {/* Header */}
         <div className="text-center mb-20 mt-16">
           <div className="inline-block mb-6 animate-float">
             <div className="flex items-center gap-2 bg-[#c8a951]/10 px-6 py-3 rounded-full border border-[#c8a951]/30 backdrop-blur-md">
@@ -189,7 +182,6 @@ export default function GameMode() {
           </p>
         </div>
 
-        {/* Game Mode Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {modes.map((mode, index) => {
             const Icon = mode.icon;
@@ -200,45 +192,36 @@ export default function GameMode() {
                 className="group relative bg-gradient-to-b from-white/5 to-transparent rounded-3xl p-10 border-2 border-white/10 hover:border-[var(--accent)] transition-all duration-500 hover:scale-105 backdrop-blur-sm text-left overflow-hidden"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Badge for new modes */}
                 {mode.badge && (
                   <div className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full animate-pulse">
                     {mode.badge}
                   </div>
                 )}
 
-                {/* Hover Gradient Background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${mode.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-                
-                {/* Glow Effect on Hover */}
+
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${mode.shadowColor}`}></div>
 
-                {/* Corner Accent */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#c8a951]/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div className="relative z-10">
-                  {/* Icon */}
                   <div className={`inline-flex p-6 bg-gradient-to-br ${mode.gradient} rounded-2xl mb-6 group-hover:scale-110 transition-all duration-300 border border-white/20 ${mode.shadowColor} shadow-lg`}>
                     <Icon className="w-14 h-14 text-white" />
                   </div>
 
-                  {/* Title */}
                   <h2 className="text-3xl font-bold text-white mb-4 group-hover:text-[#c8a951] transition-colors duration-300">
                     {mode.title}
                   </h2>
 
-                  {/* Description */}
                   <p className="text-gray-400 leading-relaxed text-lg mb-6 font-light">
                     {mode.desc}
                   </p>
 
-                  {/* Action Indicator */}
                   <div className="flex items-center gap-2 text-[#c8a951] font-semibold group-hover:gap-4 transition-all duration-300">
                     <span>Start {mode.name === 'mixed' ? 'Challenge' : 'Quiz'}</span>
                     <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
 
-                  {/* Progress Line */}
                   <div className="mt-6 h-1 w-0 group-hover:w-full bg-gradient-to-r from-[#c8a951] to-transparent transition-all duration-500 rounded-full"></div>
                 </div>
               </button>

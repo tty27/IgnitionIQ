@@ -89,7 +89,6 @@ export default function LeaderboardPage() {
 
   return (
     <main className="min-h-screen bg-black text-white py-12 px-6 relative overflow-hidden">
-      {/* Enhanced Background */}
       <div className="fixed inset-0 z-0">
         <div 
           className="absolute inset-0 opacity-20"
@@ -119,7 +118,6 @@ export default function LeaderboardPage() {
           }}
         ></div>
 
-        {/* Road Lines */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(8)].map((_, i) => (
             <div
@@ -148,7 +146,6 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Animated Car */}
       <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{
@@ -174,7 +171,6 @@ export default function LeaderboardPage() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Header */}
         <button
           onClick={() => router.push("/")}
           className="mb-8 flex items-center gap-2 border-2 border-[#c8a951]/30 text-[#c8a951] px-5 py-2.5 rounded-xl hover:bg-[#c8a951] hover:text-black transition-all duration-300 font-semibold backdrop-blur-sm shadow-lg hover:scale-105"
@@ -200,7 +196,6 @@ export default function LeaderboardPage() {
           <p className="text-xl text-gray-400">Compete with players around the world</p>
         </div>
 
-        {/* My Rank Card */}
         {myRank && myRank.user && (
           <div className="bg-gradient-to-r from-[#c8a951]/20 to-[#d9b85c]/20 border-2 border-[#c8a951] rounded-2xl p-6 mb-8 backdrop-blur-sm shadow-[0_0_40px_rgba(200,169,81,0.3)] hover:scale-[1.02] transition-transform">
             <div className="flex items-center justify-between">
@@ -230,7 +225,6 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {['global', 'road-signs', 'dashboard', 'car-knowledge'].map((tab) => (
             <button
@@ -247,7 +241,6 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        {/* Leaderboard Table */}
         <div className="bg-gradient-to-b from-white/5 to-transparent border-2 border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm shadow-[0_0_60px_rgba(200,169,81,0.1)]">
           {loading ? (
             <div className="p-12 text-center">

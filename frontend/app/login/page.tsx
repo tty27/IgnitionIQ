@@ -37,7 +37,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Enhanced Animated Background */}
       <div className="fixed inset-0 z-0">
         <div 
           className="absolute inset-0 opacity-20"
@@ -67,7 +66,6 @@ export default function LoginPage() {
           }}
         ></div>
 
-        {/* Road Lines */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(6)].map((_, i) => (
             <div
@@ -99,7 +97,6 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-10">
         
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-[#c8a951]/10 px-4 py-2 rounded-full border border-[#c8a951]/30 backdrop-blur-md mb-4">
             <Sparkles className="w-4 h-4 text-[#c8a951] animate-pulse" />
             <span className="text-[#c8a951] font-semibold text-xs tracking-wider uppercase">Secure Login</span>

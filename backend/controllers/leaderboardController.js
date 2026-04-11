@@ -1,8 +1,6 @@
-// backend/controllers/leaderboardController.js
 
 const db = require('../config/database');
 
-// Get global leaderboard
 exports.getGlobalLeaderboard = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 100;
@@ -23,7 +21,6 @@ exports.getGlobalLeaderboard = async (req, res) => {
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    // Get total count
     const [countResult] = await db.query('SELECT COUNT(*) as total FROM users');
     const total = countResult[0].total;
 
@@ -43,7 +40,6 @@ exports.getGlobalLeaderboard = async (req, res) => {
   }
 };
 
-// Get category-specific leaderboard
 exports.getCategoryLeaderboard = async (req, res) => {
   try {
     const { category } = req.params;
@@ -90,7 +86,6 @@ exports.getCategoryLeaderboard = async (req, res) => {
   }
 };
 
-// Get user's rank in global leaderboard
 exports.getUserRank = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -102,7 +97,6 @@ exports.getUserRank = async (req, res) => {
       WHERE total_xp > (SELECT total_xp FROM users WHERE id = ?)
     `, [userId]);
 
-    // Get user's stats
     const [userStats] = await db.query(`
       SELECT 
         id,

@@ -201,7 +201,7 @@ function RoadSignsQuizContent() {
   };
 
   const handleAnswer = (option: string) => {
-    if (selected) return; // prevent double click
+    if (selected) return; 
 
     setSelected(option);
 
@@ -209,7 +209,6 @@ function RoadSignsQuizContent() {
       setScore(score + 1);
     }
 
-    // short delay so user can see red/green
     setTimeout(() => {
       if (current + 1 < questions.length && timeLeft > 0) {
         setCurrent(current + 1);
@@ -282,11 +281,9 @@ function RoadSignsQuizContent() {
     );
   }
 
-  // Level Selection Screen
   if (showLevelSelect) {
     return (
       <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        {/* Enhanced Background */}
         <div className="fixed inset-0 z-0">
           <div 
             className="absolute inset-0 opacity-20"
@@ -316,7 +313,6 @@ function RoadSignsQuizContent() {
             }}
           ></div>
 
-          {/* Road Lines - Both Sides */}
           <div className="absolute inset-0 overflow-hidden">
             {[...Array(8)].map((_, i) => (
               <div
@@ -345,7 +341,6 @@ function RoadSignsQuizContent() {
           </div>
         </div>
 
-        {/* Animated Car */}
         <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{
@@ -535,7 +530,6 @@ f
       ? "Good effort! Keep practicing!"
       : "Keep learning — you'll improve!";
 
-  // Only show next level option if playing current level AND unlocked next level
   const canProgressToNext = categoryProgress && 
                             playingLevel === levelInfo.currentLevel && 
                             categoryProgress.currentLevel > levelInfo.currentLevel &&

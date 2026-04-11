@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-// Save individual answer for review
 exports.saveAnswer = async (req, res) => {
   try {
     const { questionId, userAnswer, isCorrect, timeTaken, quizResultId } = req.body;
@@ -19,7 +18,6 @@ exports.saveAnswer = async (req, res) => {
   }
 };
 
-// Get recent answered questions
 exports.getRecentAnswers = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -55,7 +53,6 @@ exports.getRecentAnswers = async (req, res) => {
   }
 };
 
-// Get incorrect answers for review
 exports.getIncorrectAnswers = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -97,7 +94,6 @@ exports.getIncorrectAnswers = async (req, res) => {
 
     const [answers] = await db.query(query, params);
 
-    // Get options for each question
     const answersWithOptions = await Promise.all(
       answers.map(async (a) => {
         const [options] = await db.query(
@@ -120,12 +116,10 @@ exports.getIncorrectAnswers = async (req, res) => {
   }
 };
 
-// Get performance analytics
 exports.getPerformanceAnalytics = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Overall accuracy
     const [accuracy] = await db.query(`
       SELECT 
         COUNT(*) as total_attempts,
@@ -135,7 +129,6 @@ exports.getPerformanceAnalytics = async (req, res) => {
       WHERE user_id = ?
     `, [userId]);
 
-    // Category breakdown
     const [categories] = await db.query(`
       SELECT 
         c.name as category_name,
@@ -151,7 +144,6 @@ exports.getPerformanceAnalytics = async (req, res) => {
       ORDER BY accuracy DESC
     `, [userId]);
 
-    // Most difficult questions
     const [difficult] = await db.query(`
       SELECT 
         q.id,
@@ -169,7 +161,6 @@ exports.getPerformanceAnalytics = async (req, res) => {
       LIMIT 10
     `, [userId]);
 
-    // Recent progress (last 30 days)
     const [recentProgress] = await db.query(`
       SELECT 
         DATE(answered_at) as date,

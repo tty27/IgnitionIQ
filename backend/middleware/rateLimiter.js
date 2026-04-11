@@ -1,6 +1,5 @@
 const rateLimitStore = new Map();
 
-// Clean up old entries every 15 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of rateLimitStore.entries()) {
@@ -12,13 +11,12 @@ setInterval(() => {
 
 /**
  * Rate limiter middleware
- * @param {number} maxRequests - Maximum requests allowed
- * @param {number} windowMs - Time window in milliseconds
- * @param {string} message - Error message to send
+ * @param {number} maxRequests 
+ * @param {number} windowMs 
+ * @param {string} message 
  */
 function createRateLimiter(maxRequests = 10, windowMs = 15 * 60 * 1000, message = 'Too many requests') {
   return (req, res, next) => {
-    // Use IP address or authenticated user ID as key
     const key = req.user ? `user_${req.user.userId}` : `ip_${req.ip}`;
     const now = Date.now();
 
@@ -32,7 +30,6 @@ function createRateLimiter(maxRequests = 10, windowMs = 15 * 60 * 1000, message 
 
     const userLimit = rateLimitStore.get(key);
 
-    // Reset if window has passed
     if (now > userLimit.resetTime) {
       rateLimitStore.set(key, {
         count: 1,
@@ -41,7 +38,6 @@ function createRateLimiter(maxRequests = 10, windowMs = 15 * 60 * 1000, message 
       return next();
     }
 
-    // Check if limit exceeded
     if (userLimit.count >= maxRequests) {
       const retryAfter = Math.ceil((userLimit.resetTime - now) / 1000);
       res.set('Retry-After', retryAfter);
@@ -51,29 +47,24 @@ function createRateLimiter(maxRequests = 10, windowMs = 15 * 60 * 1000, message 
       });
     }
 
-    // Increment count
     userLimit.count++;
     next();
   };
 }
 
-// Export different rate limiters for different routes
 module.exports = {
-  // Quiz submission: 10 per 15 minutes
   quizLimiter: createRateLimiter(
     10, 
     15 * 60 * 1000, 
     'Too many quiz attempts. Please try again later.'
   ),
 
-  // Auth routes: INCREASED to 20 per 5 minutes (more reasonable for login/signup)
   authLimiter: createRateLimiter(
     50, 
     5 * 60 * 1000, 
     'Too many authentication attempts. Please try again in a few minutes.'
   ),
 
-  // API routes: 100 per 15 minutes
   apiLimiter: createRateLimiter(
     100, 
     15 * 60 * 1000, 

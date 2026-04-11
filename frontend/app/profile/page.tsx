@@ -73,7 +73,7 @@ function ProfileContent() {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Profile data:', data); // Debug log
+          console.log('Profile data:', data); 
           setProfile(data);
         }
       } catch (error) {
@@ -116,7 +116,6 @@ function ProfileContent() {
 
   return (
     <main className="min-h-screen bg-black text-white py-12 px-6 relative overflow-hidden">
-      {/* Enhanced Background */}
       <div className="fixed inset-0 z-0">
         <div 
           className="absolute inset-0 opacity-20"
@@ -146,7 +145,6 @@ function ProfileContent() {
           }}
         ></div>
 
-        {/* Road Lines */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(8)].map((_, i) => (
             <div
@@ -175,7 +173,6 @@ function ProfileContent() {
         </div>
       </div>
 
-      {/* Animated Car */}
       <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{
@@ -201,7 +198,6 @@ function ProfileContent() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={() => router.push("/")}
           className="mb-8 flex items-center gap-2 border-2 border-[#c8a951]/30 text-[#c8a951] px-5 py-2.5 rounded-xl hover:bg-[#c8a951] hover:text-black transition-all duration-300 font-semibold backdrop-blur-sm shadow-lg hover:scale-105"
@@ -210,10 +206,8 @@ function ProfileContent() {
           Back to Home
         </button>
 
-        {/* Profile Header */}
         <div className="bg-gradient-to-b from-white/5 to-transparent border-2 border-[#c8a951] rounded-3xl p-8 mb-8 shadow-[0_0_60px_rgba(200,169,81,0.2)] backdrop-blur-sm">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Avatar */}
             <div className="relative animate-float">
               <div className="absolute inset-0 bg-gradient-to-br from-[#c8a951] to-[#d9b85c] rounded-full blur-xl opacity-50"></div>
               <div className="relative w-32 h-32 bg-gradient-to-br from-[#c8a951] to-[#d9b85c] rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-[0_0_40px_rgba(200,169,81,0.5)]">
@@ -225,7 +219,6 @@ function ProfileContent() {
               </div>
             </div>
 
-            {/* User Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="inline-flex items-center gap-2 bg-[#c8a951]/10 px-4 py-2 rounded-full border border-[#c8a951]/30 mb-2">
                 <Sparkles className="w-4 h-4 text-[#c8a951] animate-pulse" />
@@ -233,8 +226,7 @@ function ProfileContent() {
               </div>
               <h1 className="text-4xl font-black text-white mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{profile.user.name}</h1>
               <p className="text-gray-400 mb-4">{profile.user.email}</p>
-              
-              {/* XP Bar */}
+
               <div className="max-w-md">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-[#c8a951] font-semibold">Level {profile.user.level}</span>
@@ -256,7 +248,6 @@ function ProfileContent() {
               </div>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-[#c8a951]/20 to-transparent border border-[#c8a951]/20 rounded-xl p-4 text-center backdrop-blur-sm hover:scale-105 transition-transform">
                 <Trophy className="w-6 h-6 text-[#c8a951] mx-auto mb-2" />
@@ -272,7 +263,6 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Category Progress - 2x2 Grid */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-8 h-8 text-[#c8a951]" />
@@ -336,7 +326,6 @@ function ProfileContent() {
               </div>
             ))}
 
-            {/* Mixed Mode Card */}
             <div
               className="bg-gradient-to-b from-orange-500/5 to-transparent border-2 border-orange-500/30 rounded-2xl p-8 hover:border-orange-500 transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(251,146,60,0.1)] backdrop-blur-sm"
               style={{ animationDelay: `${profile.categories.length * 0.1}s` }}
@@ -404,7 +393,6 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Achievements Section */}
         <div>
           <div className="flex items-center gap-3 mb-6">
             <Award className="w-8 h-8 text-[#c8a951]" />

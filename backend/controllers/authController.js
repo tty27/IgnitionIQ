@@ -2,12 +2,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
-// Register new user
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validation
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
     }
@@ -16,7 +14,6 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Check if user already exists
     const [existingUser] = await db.query(
       'SELECT id FROM users WHERE email = ?',
       [email]
@@ -26,17 +23,14 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert user
     const [result] = await db.query(
       'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
       [name, email, hashedPassword]
     );
 
-    // Create token
     const token = jwt.sign(
       { userId: result.insertId, email },
       process.env.JWT_SECRET,
@@ -59,17 +53,14 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user
     const [users] = await db.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
@@ -81,13 +72,11 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    // Check password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Create token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -110,7 +99,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get current user profile
 exports.getProfile = async (req, res) => {
   try {
     const [users] = await db.query(

@@ -54,15 +54,12 @@ export default function Home() {
     { icon: Zap, value: "3", label: "Categories", color: "text-pink-400" }
   ];
 
-  // Calculate car position based on scroll
   const carPosition = Math.min(scrollY * 0.5, window.innerHeight);
   const carRotation = Math.min(scrollY * 0.05, 15);
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
-      {/* Animated Background with Road Image Effect */}
       <div className="fixed inset-0 z-0">
-        {/* Road Background with Overlay */}
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -70,16 +67,13 @@ export default function Home() {
             backgroundSize: '60px 60px',
           }}
         />
-        
-        {/* Gradient Overlays */}
+
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50"></div>
-        
-        {/* Animated Light Beams */}
+
         <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-[#c8a951]/20 via-transparent to-transparent animate-pulse"></div>
         <div className="absolute top-0 right-1/4 w-1 h-full bg-gradient-to-b from-[#c8a951]/20 via-transparent to-transparent animate-pulse delay-700"></div>
-        
-        {/* Floating Orbs */}
+
         <div 
           className="absolute w-96 h-96 bg-[#c8a951]/10 rounded-full blur-3xl animate-pulse"
           style={{
@@ -107,9 +101,7 @@ export default function Home() {
           }}
         ></div>
 
-        {/* Road Lines Animation - Both Sides */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Left Side Road Lines */}
           {[...Array(8)].map((_, i) => (
             <div
               key={`left-${i}`}
@@ -123,7 +115,6 @@ export default function Home() {
             ></div>
           ))}
           
-          {/* Right Side Road Lines */}
           {[...Array(8)].map((_, i) => (
             <div
               key={`right-${i}`}
@@ -139,7 +130,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Animated Car Icon - LARGER AND MORE DETAILED */}
       <div 
         className="fixed z-10 transition-all duration-300 ease-out pointer-events-none"
         style={{
@@ -149,11 +139,9 @@ export default function Home() {
         }}
       >
         <div className="relative">
-          {/* Car Glow Effect - Multiple Layers */}
           <div className="absolute inset-0 bg-[#c8a951] blur-3xl opacity-60 scale-[2]"></div>
           <div className="absolute inset-0 bg-yellow-400 blur-2xl opacity-40 scale-150"></div>
-          
-          {/* Detailed Car Icon */}
+
           <svg 
             width="100" 
             height="100" 
@@ -161,7 +149,6 @@ export default function Home() {
             fill="none" 
             className="relative z-10 drop-shadow-[0_0_30px_rgba(200,169,81,1)]"
           >
-            {/* Car Body */}
             <path 
               d="M5 13l1.5-4.5h11L19 13" 
               stroke="#c8a951" 
@@ -171,7 +158,6 @@ export default function Home() {
               fill="rgba(200,169,81,0.3)"
             />
             
-            {/* Car Bottom */}
             <path 
               d="M4 13h16v5H4z" 
               stroke="#c8a951" 
@@ -180,8 +166,7 @@ export default function Home() {
               strokeLinejoin="round"
               fill="rgba(200,169,81,0.4)"
             />
-            
-            {/* Wheels with Spokes */}
+
             <circle cx="7" cy="18" r="2.5" fill="#1a1a1a" stroke="#c8a951" strokeWidth="2"/>
             <circle cx="7" cy="18" r="1.5" fill="#c8a951"/>
             <circle cx="7" cy="18" r="0.5" fill="#000"/>
@@ -189,46 +174,38 @@ export default function Home() {
             <circle cx="17" cy="18" r="2.5" fill="#1a1a1a" stroke="#c8a951" strokeWidth="2"/>
             <circle cx="17" cy="18" r="1.5" fill="#c8a951"/>
             <circle cx="17" cy="18" r="0.5" fill="#000"/>
-            
-            {/* Windows */}
+
             <path 
               d="M8 13V10h3v3m2 0V10h3v3" 
               stroke="#c8a951" 
               strokeWidth="2" 
               strokeLinecap="round"
             />
-            
-            {/* Headlights */}
+
             <circle cx="19.5" cy="14.5" r="1" fill="#FFD700" opacity="0.9"/>
             <circle cx="19.5" cy="16.5" r="0.8" fill="#FFA500" opacity="0.8"/>
-            
-            {/* Side Mirror */}
+
             <path 
               d="M4 14h-1" 
               stroke="#c8a951" 
               strokeWidth="2" 
               strokeLinecap="round"
             />
-            
-            {/* Door Handle */}
+
             <rect x="10" y="14.5" width="2" height="0.5" fill="#c8a951" rx="0.25"/>
           </svg>
 
-          {/* Enhanced Headlight Beams - Multiple Layers */}
           <div className="absolute top-1/2 left-full w-48 h-2 bg-gradient-to-r from-yellow-300 via-yellow-400/50 to-transparent opacity-80 blur-sm"></div>
           <div className="absolute top-1/2 left-full w-64 h-4 bg-gradient-to-r from-yellow-200/60 via-yellow-300/30 to-transparent opacity-60 blur-md transform -translate-y-1"></div>
           <div className="absolute top-1/2 left-full w-40 h-1 bg-gradient-to-r from-white via-yellow-100 to-transparent opacity-90"></div>
-          
-          {/* Speed Lines */}
+
           <div className="absolute top-1/2 -left-20 w-16 h-0.5 bg-gradient-to-r from-transparent to-[#c8a951]/50 transform -translate-y-2"></div>
           <div className="absolute top-1/2 -left-16 w-12 h-0.5 bg-gradient-to-r from-transparent to-[#c8a951]/40 transform translate-y-2"></div>
         </div>
       </div>
 
-      {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-40 px-6">
         <div className="relative max-w-7xl mx-auto text-center">
-          {/* Floating Badge */}
           <div 
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#c8a951]/10 border border-[#c8a951]/30 backdrop-blur-md mb-8 animate-float"
             style={{
@@ -240,7 +217,6 @@ export default function Home() {
             <div className="w-2 h-2 bg-[#c8a951] rounded-full animate-ping"></div>
           </div>
 
-          {/* Main Heading with Gradient Text */}
           <div className="space-y-6 mb-12">
             <h1 className="text-7xl md:text-8xl lg:text-9xl font-black leading-none">
               <span className="block bg-gradient-to-r from-[#c8a951] via-[#d9b85c] to-[#c8a951] bg-clip-text text-transparent animate-gradient mb-4 p-4">
@@ -273,7 +249,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* CTA Button with Enhanced Effects */}
           <div className="flex justify-center gap-4 mb-16">
             <button
               onClick={() => router.push("/game")}
@@ -294,7 +269,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Stats Row */}
           <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
@@ -315,7 +289,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
         <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-[#c8a951]/50 rounded-full p-1">
             <div className="w-1.5 h-2 bg-[#c8a951] rounded-full mx-auto animate-scroll"></div>
@@ -323,10 +296,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="relative py-32 px-6 z-10" id="features">
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
           <div className="text-center mb-20">
             <div className="inline-block mb-6">
               <span className="text-[#c8a951] font-semibold text-sm tracking-widest uppercase bg-[#c8a951]/10 px-4 py-2 rounded-full border border-[#c8a951]/30">
@@ -339,7 +310,6 @@ export default function Home() {
             <div className="w-24 h-1.5 bg-gradient-to-r from-transparent via-[#c8a951] to-transparent mx-auto"></div>
           </div>
 
-          {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
@@ -351,30 +321,24 @@ export default function Home() {
                     animation: `fadeInUp 0.8s ease-out ${index * 0.2 + 0.3}s both`
                   }}
                 >
-                  {/* Gradient Background on Hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-                  
-                  {/* Icon Container */}
+
                   <div className="relative z-10 mb-8">
                     <div className={`inline-flex p-5 bg-gradient-to-br ${feature.color} rounded-2xl group-hover:scale-110 transition-all duration-300 ${feature.shadowColor} shadow-lg`}>
                       <Icon className="w-12 h-12 text-white" />
                     </div>
                   </div>
 
-                  {/* Title */}
                   <h3 className="text-3xl font-bold text-white mb-5 group-hover:text-[#c8a951] transition-colors duration-300">
                     {feature.title}
                   </h3>
 
-                  {/* Description */}
                   <p className="text-gray-400 leading-relaxed text-lg font-light mb-6">
                     {feature.description}
                   </p>
 
-                  {/* Progress Bar */}
                   <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-[#c8a951] to-transparent transition-all duration-500 rounded-full"></div>
 
-                  {/* Corner Accent */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#c8a951]/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </div>
               );
@@ -383,11 +347,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Call to Action Section */}
       <section className="relative py-32 px-6 z-10">
         <div className="max-w-5xl mx-auto">
           <div className="relative bg-gradient-to-br from-[#c8a951] via-[#d9b85c] to-[#c8a951] rounded-3xl p-16 overflow-hidden shadow-[0_0_100px_rgba(200,169,81,0.5)]">
-            {/* Animated Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div 
                 className="absolute inset-0"
@@ -398,7 +360,6 @@ export default function Home() {
               ></div>
             </div>
 
-            {/* Floating Elements */}
             <div className="absolute top-10 right-10 w-20 h-20 bg-black/10 rounded-full blur-xl animate-pulse"></div>
             <div className="absolute bottom-10 left-10 w-32 h-32 bg-black/10 rounded-full blur-xl animate-pulse delay-700"></div>
 
@@ -429,7 +390,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Bottom Spacing */}
       <div className="h-20"></div>
 
       <style jsx>{`

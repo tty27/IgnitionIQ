@@ -1,8 +1,6 @@
-// backend/controllers/levelController.js
 
 const db = require('../config/database');
 
-// XP calculation constants
 const XP_PER_CORRECT_ANSWER = 10;
 const XP_MULTIPLIERS = {
   1: 1.0,   // Beginner
@@ -44,12 +42,10 @@ function calculateCategoryLevel(categoryXp) {
   return 5;
 }
 
-// Get mixed questions from all categories
 exports.getMixedQuestions = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Get all categories
     const [categories] = await db.query('SELECT id FROM quiz_categories');
     
     if (categories.length === 0) {
@@ -57,8 +53,7 @@ exports.getMixedQuestions = async (req, res) => {
     }
 
     const categoryIds = categories.map(c => c.id);
-    
-    // Get 50 random questions from all categories (mixed levels)
+
     const placeholders = categoryIds.map(() => '?').join(',');
     const [questions] = await db.query(
       `SELECT q.id, q.question, q.image_url, q.correct_answer, q.explanation, c.name as category_name
@@ -77,7 +72,6 @@ exports.getMixedQuestions = async (req, res) => {
       });
     }
 
-    // Get options for each question
     const questionsWithOptions = await Promise.all(
       questions.map(async (q) => {
         const [options] = await db.query(
@@ -111,8 +105,6 @@ exports.getQuestionsByLevel = async (req, res) => {
   try {
     const { category, level: levelParam } = req.params;
     const userId = req.user.userId;
-
-    // Get category ID
     const [categories] = await db.query(
       'SELECT id FROM quiz_categories WHERE slug = ?',
       [category]
@@ -124,12 +116,10 @@ exports.getQuestionsByLevel = async (req, res) => {
 
     const categoryId = categories[0].id;
 
-    // If level is provided in path, use it; otherwise get user's current level
     let level;
     if (levelParam) {
       level = parseInt(levelParam);
       
-      // Check if user has access to this level
       const [progress] = await db.query(
         'SELECT current_level FROM user_category_progress WHERE user_id = ? AND category_id = ?',
         [userId, categoryId]
@@ -141,7 +131,6 @@ exports.getQuestionsByLevel = async (req, res) => {
         return res.status(403).json({ error: 'Level not unlocked yet' });
       }
     } else {
-      // Get user's current level for this category
       const [progress] = await db.query(
         'SELECT current_level FROM user_category_progress WHERE user_id = ? AND category_id = ?',
         [userId, categoryId]
@@ -150,7 +139,6 @@ exports.getQuestionsByLevel = async (req, res) => {
       level = progress.length > 0 ? progress[0].current_level : 1;
     }
 
-    // Get questions for this level WITH EXPLANATION
     const [questions] = await db.query(
       'SELECT id, question, image_url, correct_answer, explanation FROM questions WHERE category_id = ? AND difficulty_level = ? ORDER BY RAND() LIMIT 10',
       [categoryId, level]
@@ -165,7 +153,6 @@ exports.getQuestionsByLevel = async (req, res) => {
       });
     }
 
-    // Get options for each question
     const questionsWithOptions = await Promise.all(
       questions.map(async (q) => {
         const [options] = await db.query(
@@ -196,44 +183,37 @@ exports.getQuestionsByLevel = async (req, res) => {
   }
 };
 
-// Save result with XP calculation AND answer history
 exports.saveResultWithXP = async (req, res) => {
   try {
     const { category, score, totalQuestions, timeTaken, level, answers } = req.body;
     const userId = req.user.userId;
 
-    console.log('Saving result:', { category, score, totalQuestions, userId }); // Debug log
+    console.log('Saving result:', { category, score, totalQuestions, userId }); 
 
-    // Validation
     if (!category || score === undefined || !totalQuestions) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const quizLevel = level || 1;
 
-    // Calculate XP earned
     const baseXp = score * XP_PER_CORRECT_ANSWER;
     const multiplier = category === 'mixed' ? 1.5 : (XP_MULTIPLIERS[quizLevel] || 1.0);
     const xpEarned = Math.floor(baseXp * multiplier);
 
-    // Perfect score bonus
     const perfectBonus = (score === totalQuestions && totalQuestions > 0) ? Math.floor(xpEarned * 0.5) : 0;
     const totalXpEarned = xpEarned + perfectBonus;
 
     let quizResultId;
 
-    // Handle mixed mode vs regular categories
     if (category === 'mixed') {
-      // SAVE MIXED MODE RESULT WITH NULL category_id
       const [result] = await db.query(
         'INSERT INTO user_quiz_results (user_id, category_id, score, total_questions, time_taken, xp_earned, difficulty_level) VALUES (?, NULL, ?, ?, ?, ?, ?)',
         [userId, score, totalQuestions, timeTaken, totalXpEarned, 1]
       );
       quizResultId = result.insertId;
-      console.log('Mixed mode result saved with ID:', quizResultId); // Debug log
+      console.log('Mixed mode result saved with ID:', quizResultId);
 
     } else {
-      // Regular category handling
       const [categories] = await db.query(
         'SELECT id FROM quiz_categories WHERE slug = ?',
         [category]
@@ -252,7 +232,6 @@ exports.saveResultWithXP = async (req, res) => {
 
       quizResultId = result.insertId;
 
-      // Save individual answers for review (if provided)
       if (answers && Array.isArray(answers)) {
         for (const answer of answers) {
           try {
@@ -273,21 +252,18 @@ exports.saveResultWithXP = async (req, res) => {
         }
       }
 
-      // Update category progress
       const [categoryProgress] = await db.query(
         'SELECT xp, current_level, highest_score FROM user_category_progress WHERE user_id = ? AND category_id = ?',
         [userId, categoryId]
       );
 
       if (categoryProgress.length === 0) {
-        // Create new progress entry
         const newCategoryLevel = calculateCategoryLevel(totalXpEarned);
         await db.query(
           'INSERT INTO user_category_progress (user_id, category_id, current_level, xp, highest_score) VALUES (?, ?, ?, ?, ?)',
           [userId, categoryId, newCategoryLevel, totalXpEarned, score]
         );
       } else {
-        // Update existing progress
         const newCategoryXp = categoryProgress[0].xp + totalXpEarned;
         const newCategoryLevel = calculateCategoryLevel(newCategoryXp);
         const newHighScore = Math.max(categoryProgress[0].highest_score, score);
@@ -299,13 +275,11 @@ exports.saveResultWithXP = async (req, res) => {
       }
     }
 
-    // Update user's total XP and level
     await db.query(
       'UPDATE users SET total_xp = total_xp + ? WHERE id = ?',
       [totalXpEarned, userId]
     );
 
-    // Get updated total XP
     const [userXp] = await db.query(
       'SELECT total_xp, level FROM users WHERE id = ?',
       [userId]
@@ -315,7 +289,6 @@ exports.saveResultWithXP = async (req, res) => {
     const oldLevel = userXp[0].level;
     const newUserLevel = calculateUserLevel(newTotalXp);
 
-    // Update user level if changed
     if (newUserLevel > oldLevel) {
       await db.query(
         'UPDATE users SET level = ? WHERE id = ?',
@@ -325,7 +298,7 @@ exports.saveResultWithXP = async (req, res) => {
 
     const leveledUp = newUserLevel > oldLevel;
 
-    console.log('Result saved successfully:', { xpEarned: totalXpEarned, newUserLevel, leveledUp }); // Debug log
+    console.log('Result saved successfully:', { xpEarned: totalXpEarned, newUserLevel, leveledUp }); 
 
     res.status(201).json({
       message: 'Result saved successfully',
@@ -342,13 +315,11 @@ exports.saveResultWithXP = async (req, res) => {
   }
 };
 
-// Get user's category progress
 exports.getCategoryProgress = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { category } = req.params;
 
-    // Get category ID
     const [categories] = await db.query(
       'SELECT id, name FROM quiz_categories WHERE slug = ?',
       [category]
@@ -360,7 +331,6 @@ exports.getCategoryProgress = async (req, res) => {
 
     const categoryId = categories[0].id;
 
-    // Get progress
     const [progress] = await db.query(
       'SELECT current_level, xp, highest_score FROM user_category_progress WHERE user_id = ? AND category_id = ?',
       [userId, categoryId]
@@ -394,14 +364,13 @@ exports.getCategoryProgress = async (req, res) => {
   }
 };
 
-// Get user profile with stats
+
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    console.log('Getting profile for user:', userId); // Debug log
+    console.log('Getting profile for user:', userId);
 
-    // Get user data
     const [users] = await db.query(
       'SELECT id, name, email, total_xp, level, created_at FROM users WHERE id = ?',
       [userId]
@@ -413,7 +382,7 @@ exports.getUserProfile = async (req, res) => {
 
     const user = users[0];
 
-    // Get category progress
+
     const [categoryProgress] = await db.query(`
       SELECT 
         c.name as category_name,
@@ -425,13 +394,11 @@ exports.getUserProfile = async (req, res) => {
       LEFT JOIN user_category_progress p ON c.id = p.category_id AND p.user_id = ?
     `, [userId]);
 
-    // Get total quizzes completed (including mixed mode)
     const [quizStats] = await db.query(
       'SELECT COUNT(*) as total_quizzes, SUM(score) as total_correct FROM user_quiz_results WHERE user_id = ?',
       [userId]
     );
 
-    // Get mixed mode stats with debug logging
     const [mixedStats] = await db.query(
       `SELECT 
         COUNT(*) as total_attempts,
@@ -442,9 +409,8 @@ exports.getUserProfile = async (req, res) => {
       [userId]
     );
 
-    console.log('Mixed mode stats from DB:', mixedStats[0]); // Debug log
+    console.log('Mixed mode stats from DB:', mixedStats[0]); 
 
-    // Calculate next level XP
     const nextLevelXp = XP_FOR_LEVEL[user.level + 1] || null;
     const xpToNextLevel = nextLevelXp ? nextLevelXp - user.total_xp : 0;
 
